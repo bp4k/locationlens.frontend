@@ -6,8 +6,10 @@ import {
   Scripts,
   ScrollRestoration,
 } from "react-router";
+import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 
 import type { Route } from "./+types/root";
+import { AuthProvider } from "./auth/auth-context";
 import "./app.css";
 
 export const links: Route.LinksFunction = () => [
@@ -42,7 +44,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  return <Outlet />;
+  return (
+    <FluentProvider theme={webLightTheme}>
+      <AuthProvider>
+        <Outlet />
+      </AuthProvider>
+    </FluentProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

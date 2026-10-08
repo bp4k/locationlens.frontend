@@ -1,7 +1,8 @@
 import type { Config } from "@react-router/dev/config";
 
 export default {
-  // Config options...
-  // Server-side render by default, to enable SPA mode set this to `false`
-  ssr: true,
+  // SPA mode: auth state and user data are entirely client-side (token in
+  // localStorage, profile fetched from the API), so there is nothing useful
+  // to render on the server.
+  ssr: false,
 } satisfies Config;
