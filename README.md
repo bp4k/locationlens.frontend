@@ -85,3 +85,12 @@ This template comes with [Tailwind CSS](https://tailwindcss.com/) already config
 ---
 
 Built with ❤️ using React Router.
+
+## Reviews
+
+`ReviewView` supports place reviews, user review history, and submission using
+Fluent UI and the existing authenticated API helper. Routes, API contract, and
+test instructions are documented in [docs/reviews.md](docs/reviews.md).
+
+Run `npm test` for unit tests, `npm run typecheck` for TypeScript checks, and
+`npm run build` for the production build.
