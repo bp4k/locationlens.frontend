@@ -13,7 +13,6 @@ const existing: ReviewModel = {
   rating: 4,
   text: "A lovely park.",
   createdAt: "2026-10-09T12:00:00Z",
-  userId: "user-1",
   placeId: "place-1",
 };
 const created: ReviewModel = {
@@ -70,23 +69,17 @@ describe("ReviewView", () => {
     expect(await screen.findByText("A lovely park.")).toBeInTheDocument();
     expect(api.getPlaceReviews).toHaveBeenCalledWith("place-1");
     expect(screen.getByLabelText("4 out of 5 stars")).toBeInTheDocument();
-    expect(screen.getByText(/Reviewer: user-1/)).toHaveTextContent(
-      "2026-10-09",
-    );
+    expect(screen.getByText("2026-10-09")).toBeInTheDocument();
+    expect(screen.queryByText(/Reviewer:/)).not.toBeInTheDocument();
   });
 
   it("displays user history and place identifiers without a submission form", async () => {
     const api = client();
-    render(
-      <ReviewView
-        apiClient={api}
-        target={{ kind: "user", userId: "user-1" }}
-      />,
-    );
+    render(<ReviewView apiClient={api} target={{ kind: "history" }} />);
     expect(await screen.findByText("A lovely park.")).toBeInTheDocument();
-    expect(api.getUserReviewHistory).toHaveBeenCalledWith("user-1");
+    expect(api.getUserReviewHistory).toHaveBeenCalledWith();
     expect(
-      screen.getByRole("heading", { name: "Review history" }),
+      screen.getByRole("heading", { name: "Your review history" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/Place: place-1/)).toBeInTheDocument();
     expect(
@@ -103,11 +96,11 @@ describe("ReviewView", () => {
     });
     expect(api.getPlaceReviews).toHaveBeenCalledWith("place-1");
     await act(async () => {
-      await ref.current!.displayUserReviewHistory("user-1");
+      await ref.current!.displayUserReviewHistory();
     });
-    expect(api.getUserReviewHistory).toHaveBeenCalledWith("user-1");
+    expect(api.getUserReviewHistory).toHaveBeenCalledWith();
     expect(
-      screen.getByRole("heading", { name: "Review history" }),
+      screen.getByRole("heading", { name: "Your review history" }),
     ).toBeInTheDocument();
   });
 
@@ -122,14 +115,9 @@ describe("ReviewView", () => {
       />,
     );
     expect(await screen.findByText(/No reviews yet/)).toBeInTheDocument();
-    rerender(
-      <ReviewView
-        apiClient={api}
-        target={{ kind: "user", userId: "user-1" }}
-      />,
-    );
+    rerender(<ReviewView apiClient={api} target={{ kind: "history" }} />);
     expect(
-      await screen.findByText("This user has not written any reviews yet."),
+      await screen.findByText("You have not written any reviews yet."),
     ).toBeInTheDocument();
   });
 

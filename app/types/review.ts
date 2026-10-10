@@ -4,10 +4,9 @@ export interface ReviewModel {
   rating: number;
   text: string;
   createdAt: string;
-  userId: string;
   placeId: string;
 }
 
 export type ReviewTarget =
   | { kind: "place"; placeId: string }
-  | { kind: "user"; userId: string };
+  | { kind: "history" };

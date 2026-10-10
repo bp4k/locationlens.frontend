@@ -7,6 +7,6 @@ export default [
     index("routes/home.tsx"),
     route("account", "routes/account.tsx"),
     route("places/:placeId/reviews", "routes/place-reviews.tsx"),
-    route("users/:userId/reviews", "routes/user-reviews.tsx"),
+    route("reviews/history", "routes/review-history.tsx"),
   ]),
 ] satisfies RouteConfig;
