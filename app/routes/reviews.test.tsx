@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import PlaceReviews from "./place-reviews";
-import UserReviews from "./user-reviews";
+import ReviewHistory from "./review-history";
 import ProtectedLayout from "../layouts/protected-layout";
 import { AuthProvider } from "../auth/auth-context";
 import { reviewApiClient } from "../lib/review-api";
@@ -53,19 +53,17 @@ describe("review routes", () => {
     expect(await screen.findByText(/No reviews yet/)).toBeInTheDocument();
     expect(reviewApiClient.getPlaceReviews).toHaveBeenCalledWith("place-123");
   });
-  it("passes the route user ID to the default API client", async () => {
+  it("loads authenticated history without supplying a user ID", async () => {
     render(
-      <MemoryRouter initialEntries={["/users/user-123/reviews"]}>
+      <MemoryRouter initialEntries={["/reviews/history"]}>
         <Routes>
-          <Route path="/users/:userId/reviews" element={<UserReviews />} />
+          <Route path="/reviews/history" element={<ReviewHistory />} />
         </Routes>
       </MemoryRouter>,
     );
     expect(
-      await screen.findByText(/has not written any reviews/),
+      await screen.findByText(/have not written any reviews/),
     ).toBeInTheDocument();
-    expect(reviewApiClient.getUserReviewHistory).toHaveBeenCalledWith(
-      "user-123",
-    );
+    expect(reviewApiClient.getUserReviewHistory).toHaveBeenCalledWith();
   });
 });
