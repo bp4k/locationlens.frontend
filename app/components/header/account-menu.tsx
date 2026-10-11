@@ -22,9 +22,6 @@ export function AccountMenu() {
       <MenuPopover>
         <MenuList>
           <MenuItem onClick={() => navigate("/account")}>Account</MenuItem>
-          <MenuItem onClick={() => navigate("/reviews/history")}>
-            My reviews
-          </MenuItem>
         </MenuList>
       </MenuPopover>
     </Menu>

@@ -51,7 +51,7 @@ const useStyles = makeStyles({
 
 export interface ReviewViewHandle {
   displayPlaceReviews(placeId: string): Promise<void>;
-  displayUserReviewHistory(): Promise<void>;
+  displayUserReviewHistory(userId: string): Promise<void>;
   submitReview(placeId: string, rating: number, text: string): Promise<void>;
 }
 
@@ -70,7 +70,9 @@ interface ReadState {
 
 function targetKey(target?: ReviewTarget): string {
   if (!target) return "";
-  return target.kind === "place" ? `place:${target.placeId}` : "history";
+  return target.kind === "place"
+    ? `place:${target.placeId}`
+    : `user:${target.userId}`;
 }
 
 function errorMessage(error: unknown, fallback: string): string {
@@ -122,14 +124,13 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
         }
         selected.current = next;
         setRead({ target: next, reviews: [], status: "loading" });
-        const identifier = next.kind === "place" ? next.placeId : undefined;
+        const identifier = next.kind === "place" ? next.placeId : next.userId;
         try {
-          if (identifier !== undefined && !identifier.trim())
-            throw new Error("Missing identifier");
+          if (!identifier.trim()) throw new Error("Missing identifier");
           const reviews =
             next.kind === "place"
               ? await apiClient.getPlaceReviews(next.placeId)
-              : await apiClient.getUserReviewHistory();
+              : await apiClient.getUserReviewHistory(next.userId);
           if (alive.current && sequence === readSequence.current) {
             setRead({ target: next, reviews, status: "ready" });
           }
@@ -151,16 +152,14 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
     );
 
     const kind = target?.kind;
-    const identifier = target?.kind === "place" ? target.placeId : undefined;
+    const identifier =
+      target?.kind === "place" ? target.placeId : target?.userId;
     useEffect(() => {
-      if (
-        kind === "history" ||
-        (kind === "place" && identifier !== undefined)
-      ) {
+      if (kind && identifier !== undefined) {
         void display(
           kind === "place"
-            ? { kind, placeId: identifier! }
-            : { kind: "history" },
+            ? { kind, placeId: identifier }
+            : { kind, userId: identifier },
         );
       } else {
         ++readSequence.current;
@@ -245,7 +244,7 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
       ref,
       () => ({
         displayPlaceReviews: (placeId) => display({ kind: "place", placeId }),
-        displayUserReviewHistory: () => display({ kind: "history" }),
+        displayUserReviewHistory: (userId) => display({ kind: "user", userId }),
         submitReview,
       }),
       [display, submitReview],
@@ -257,11 +256,11 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
         void submitReview(read.target.placeId, rating, text);
     }
 
-    const history = read.target?.kind === "history";
+    const history = read.target?.kind === "user";
     return (
       <section className={styles.container} aria-labelledby={`${id}-heading`}>
         <h2 id={`${id}-heading`}>
-          {history ? "Your review history" : "Place reviews"}
+          {history ? "Review history" : "Place reviews"}
         </h2>
         {read.status === "idle" && <p>Select a place to see its reviews.</p>}
         {read.status === "loading" && <Spinner label="Loading reviews…" />}
@@ -279,14 +278,14 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
         {read.status === "ready" && read.reviews.length === 0 && (
           <p>
             {history
-              ? "You have not written any reviews yet."
+              ? "This user has not written any reviews yet."
               : "No reviews yet. Be the first to share your experience."}
           </p>
         )}
         {read.status === "ready" && read.reviews.length > 0 && (
           <ul
             className={styles.list}
-            aria-label={history ? "Your reviews" : "Place reviews"}
+            aria-label={history ? "User reviews" : "Place reviews"}
           >
             {read.reviews.map((review) => (
               <li key={review.reviewId}>
@@ -296,7 +295,10 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
                   </p>
                   <p className={styles.text}>{review.text}</p>
                   <p className={styles.meta}>
-                    {history && <>Place: {review.placeId} · </>}
+                    {history
+                      ? `Place: ${review.placeId}`
+                      : `Reviewer: ${review.userId}`}{" "}
+                    ·{" "}
                     <time dateTime={review.createdAt}>
                       {review.createdAt.slice(0, 10)}
                     </time>
