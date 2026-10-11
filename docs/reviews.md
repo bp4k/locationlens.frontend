@@ -51,6 +51,20 @@ preserve rating/text, duplicate clicks are blocked, and successful creation
 adds the mapped response to the current place list. No update/delete operations
 or backend changes are included.
 
+## Model contract
+
+`app/types/review.ts` owns the public `ReviewModel`, backend wire
+`ReviewResponse`, and the checked `parseReviewModel` / `parseReviewModels`
+conversions. The API client uses those functions for creation and both read
+operations, so model validation and field mapping have a single implementation.
+
+`ReviewModel` contains `reviewId`, `placeId`, `rating`, `text`, and `createdAt`.
+It intentionally does not include the backend entity's private `userId`, which
+is absent from `ReviewResponse`. UUIDs and timestamps remain strings; the
+conversion preserves Instant precision and review text exactly. Parsing validates
+the response without mutating or retaining the source object, and rejects an
+invalid list item rather than returning a partial result.
+
 ## Client guarantees
 
 The three ReviewApiClient operations are asynchronous: creation returns
