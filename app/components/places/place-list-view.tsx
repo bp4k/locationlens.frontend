@@ -1,16 +1,7 @@
 import { useId } from "react";
 import { makeStyles, shorthands, tokens } from "@fluentui/react-components";
-import type { PlaceModel, PlaceTypeModel } from "../../types/place";
-
-const typeLabels: Record<PlaceTypeModel, string> = {
-  RESTAURANT: "Restaurant",
-  BATHROOM: "Bathroom",
-  PARK: "Park",
-  ATTRACTION: "Attraction",
-  HOTEL: "Hotel",
-  HOSPITAL: "Hospital",
-  OTHER: "Other",
-};
+import type { PlaceModel } from "../../types/place";
+import { placeTypeLabels } from "./place-type-labels";
 
 const useStyles = makeStyles({
   container: { color: tokens.colorNeutralForeground1 },
@@ -89,7 +80,7 @@ export function PlaceListView({
                 <span className={styles.secondary}>{place.address}</span>
                 {place.types.length > 0 && (
                   <span className={styles.secondary}>
-                    {place.types.map((type) => typeLabels[type]).join(" · ")}
+                    {place.types.map((type) => placeTypeLabels[type]).join(" · ")}
                   </span>
                 )}
               </button>
