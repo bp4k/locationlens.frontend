@@ -75,3 +75,91 @@ describe("ReviewApiClient backend contract", () => {
     },
   );
 });
+
+describe("ReviewApiClient validation", () => {
+  it.each([
+    ["", 5, "Great!"],
+    ["   ", 5, "Great!"],
+    ["place-123", 0, "Great!"],
+    ["place-123", 6, "Great!"],
+    ["place-123", 2.5, "Great!"],
+    ["place-123", Number.NaN, "Great!"],
+    ["place-123", 5, ""],
+    ["place-123", 5, "   "],
+    ["place-123", 5, "x".repeat(2001)],
+  ] as [string, number, string][])(
+    "rejects invalid submission %s / %s before HTTP",
+    async (placeId, rating, text) => {
+      const fetch = setup(response, 201);
+      await expect(
+        reviewApiClient.submitReview(placeId, rating, text),
+      ).rejects.toMatchObject({ status: 400 });
+      expect(fetch).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects blank IDs for place reads", async () => {
+    const fetch = setup([]);
+    await expect(reviewApiClient.getPlaceReviews(" ")).rejects.toMatchObject({
+      status: 400,
+    });
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 5])(
+    "accepts rating %s and text at the backend's length limit",
+    async (rating) => {
+      const fetch = setup({ ...response, rating, text: "x".repeat(2000) }, 201);
+      const saved = await reviewApiClient.submitReview(
+        "place-123",
+        rating,
+        "x".repeat(2000),
+      );
+      expect(saved.rating).toBe(rating);
+      expect(saved.text).toHaveLength(2000);
+      expect(fetch).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each([null, {}, { reviews: [response] }])(
+    "rejects malformed history list %j",
+    async (body) => {
+      setup(body);
+      await expect(reviewApiClient.getUserReviewHistory()).rejects.toThrow(
+        "invalid review list",
+      );
+    },
+  );
+
+  it.each([
+    null,
+    { ...response, review_id: undefined },
+    { ...response, place_id: undefined },
+    { ...response, rating: "5" },
+    { ...response, rating: 6 },
+    { ...response, rating: 1.5 },
+    { ...response, text: null },
+    { ...response, created_at: "invalid date" },
+    model,
+  ])("rejects malformed created review %j", async (body) => {
+    setup(body, 201);
+    await expect(
+      reviewApiClient.submitReview("place-123", 5, "Great!"),
+    ).rejects.toThrow("invalid review response");
+  });
+
+  it("rejects a malformed item rather than returning a partial place list", async () => {
+    setup([response, { ...response, created_at: null }]);
+    await expect(reviewApiClient.getPlaceReviews("place-123")).rejects.toThrow(
+      "invalid review response",
+    );
+  });
+
+  it("propagates a network error from history reads", async () => {
+    const fetch = setup([]);
+    fetch.mockRejectedValue(new TypeError("Network unavailable"));
+    await expect(reviewApiClient.getUserReviewHistory()).rejects.toThrow(
+      "Network unavailable",
+    );
+  });
+});
