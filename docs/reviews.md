@@ -51,6 +51,27 @@ preserve rating/text, duplicate clicks are blocked, and successful creation
 adds the mapped response to the current place list. No update/delete operations
 or backend changes are included.
 
+## Client guarantees
+
+The three ReviewApiClient operations are asynchronous: creation returns
+`Promise<ReviewModel>` and both reads return `Promise<ReviewModel[]>`.
+The backend only implements authenticated-user history, so
+`getUserReviewHistory()` accepts no user ID. Fetching another user's history
+would require a backend endpoint and its authorization rules first.
+
+The client itself validates nonblank place IDs, integer ratings 1–5, and
+nonblank review text up to 2,000 characters, even when called outside ReviewView.
+Invalid input rejects with `ApiError` status 400 before any HTTP request; the
+backend still independently validates incoming requests. Valid text and place
+IDs are sent unchanged.
+
+All successful responses are checked at runtime before conversion. Reviews must
+contain the backend's string IDs, numeric integer rating, string text, and a
+parseable `created_at` timestamp. Reads must return arrays, and every item must
+satisfy the review contract. Malformed responses reject rather than producing
+partially valid lists, undefined fields, or render-time crashes. Network and
+backend HTTP errors continue to propagate through the shared API helper.
+
 ## Verification
 
 ```sh
