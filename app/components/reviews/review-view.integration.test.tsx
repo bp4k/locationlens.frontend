@@ -8,7 +8,8 @@ it("renders actual ReviewResponse JSON and submits the backend's ReviewRequest t
   vi.stubEnv("VITE_APP_API_URL", "http://localhost:8080/api");
   saveSession("test-token", 3600);
   const existing = {
-    review_id: "review-1",
+    review_id: "6a7d1f76-ef09-49ee-a310-25850196740a",
+    user_id: "a852a1c9-1384-4571-8c53-7eeeb4975329",
     place_id: "park",
     rating: 4,
     text: "Existing review",
@@ -19,7 +20,12 @@ it("renders actual ReviewResponse JSON and submits the backend's ReviewRequest t
     .mockResolvedValueOnce(Response.json([existing]))
     .mockResolvedValueOnce(
       Response.json(
-        { ...existing, review_id: "review-2", rating: 5, text: "New review" },
+        {
+          ...existing,
+          review_id: "f86ed47b-3fd1-46c9-9404-2162d583976d",
+          rating: 5,
+          text: "New review",
+        },
         { status: 201 },
       ),
     );

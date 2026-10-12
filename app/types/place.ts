@@ -1,5 +1,5 @@
-/** Place types from the frontend architecture diagram. */
-export const placeTypes = [
+/** Supported categories shared with the backend PlaceType enum. */
+export const PLACE_TYPES = [
   "RESTAURANT",
   "BATHROOM",
   "PARK",
@@ -9,9 +9,9 @@ export const placeTypes = [
   "OTHER",
 ] as const;
 
-export type PlaceTypeModel = (typeof placeTypes)[number];
+export type PlaceTypeModel = (typeof PLACE_TYPES)[number];
 
-/** Proposed frontend model; confirm the JSON contract with the backend owner. */
+/** Place IDs are opaque strings; Java Doubles are represented as JS numbers. */
 export interface PlaceModel {
   placeId: string;
   name: string;
@@ -21,7 +21,7 @@ export interface PlaceModel {
   types: PlaceTypeModel[];
 }
 
-/** Wire shape in the backend's pending PlaceResponse DTO (commit 4d27a4b). */
+/** Backend PlaceResponse JSON contract. */
 export interface PlaceResponse {
   place_id: string;
   name: string;

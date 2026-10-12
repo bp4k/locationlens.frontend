@@ -2,8 +2,8 @@
 
 The view uses Fluent UI, the existing protected layout, token storage, and
 `apiFetch`. Its HTTP adapter now matches `ReviewController`, `ReviewRequest`,
-`ReviewResponse`, and `ApiExceptionHandler` in backend commit
-`5fed5f10f36f3b55532c41a5e425fe480d0be3b5`.
+`ReviewResponse`, and `ApiExceptionHandler`. The companion backend contract
+change adds `user_id` to the response; deploy it before this frontend change.
 
 ## Frontend routes
 
@@ -40,10 +40,10 @@ user/place reviews return `409`; invalid input returns `400`; invalid token
 subjects return `401`. `apiFetch` supports the backend's `{ error, message }`
 error body. Existing UI error states preserve drafts after failed submission.
 
-The response contains `review_id`, `place_id`, `rating`, `text`, and `created_at`.
+The response contains `review_id`, `user_id`, `place_id`, `rating`, `text`, and `created_at`.
 The adapter explicitly converts snake_case fields to the UI's camelCase
-`ReviewModel`. The backend omits user ID/display name, so place-review cards
-show rating, text, and date without inventing an author. History also shows the
+`ReviewModel`. The backend supplies the author UUID, but does not supply a display name.
+Place-review cards continue to show rating, text, and date. History also shows the
 place ID. Empty arrays remain empty states.
 
 Target changes clear drafts and invalidate older reads. Failed submissions
@@ -58,9 +58,9 @@ or backend changes are included.
 conversions. The API client uses those functions for creation and both read
 operations, so model validation and field mapping have a single implementation.
 
-`ReviewModel` contains `reviewId`, `placeId`, `rating`, `text`, and `createdAt`.
-It intentionally does not include the backend entity's private `userId`, which
-is absent from `ReviewResponse`. UUIDs and timestamps remain strings; the
+`ReviewModel` contains `reviewId`, `userId`, `placeId`, `rating`, `text`, and `createdAt`.
+Both UUID fields are validated and mapped from the server; author identity is never
+inferred from the current session for place reviews. UUIDs and timestamps remain strings; the
 conversion preserves Instant precision and review text exactly. Parsing validates
 the response without mutating or retaining the source object, and rejects an
 invalid list item rather than returning a partial result.
@@ -80,7 +80,7 @@ backend still independently validates incoming requests. Valid text and place
 IDs are sent unchanged.
 
 All successful responses are checked at runtime before conversion. Reviews must
-contain the backend's string IDs, numeric integer rating, string text, and a
+contain valid review/author UUID strings, a nonblank place ID, numeric integer rating, string text, and a
 parseable `created_at` timestamp. Reads must return arrays, and every item must
 satisfy the review contract. Malformed responses reject rather than producing
 partially valid lists, undefined fields, or render-time crashes. Network and
