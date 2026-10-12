@@ -32,7 +32,7 @@ export interface PlaceResponse {
 }
 
 export function isPlaceType(value: unknown): value is PlaceTypeModel {
-  return placeTypes.some((type) => type === value);
+  return PLACE_TYPES.some((type) => type === value);
 }
 
 /** Coordinates use decimal degrees, including zero and fractional values. */
