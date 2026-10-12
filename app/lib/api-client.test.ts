@@ -12,6 +12,13 @@ function setup(response = Response.json({ ok: true })) {
 }
 
 describe("apiFetch", () => {
+  it("accepts a successful 204 response without parsing JSON", async () => {
+    setup(new Response(null, { status: 204 }));
+    await expect(apiFetch<void>("/v1/business-claims/claim/approve", {
+      method: "POST",
+    })).resolves.toBeUndefined();
+  });
+
   it("preserves the current user endpoint and adds the bearer header", async () => {
     const fetch = setup();
     saveSession("token", 3600);
