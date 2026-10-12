@@ -24,9 +24,8 @@ highlights the selection whether it came from the list or map.
 Coordinate this shared type with Albert and confirm field names and enum values
 with the backend owner before connecting PlaceApiClient.
 
-This component makes no API calls. SearchView will handle loading and service
-errors and render the list once results are available. It is not mounted on the
-placeholder home page yet; there is no production sample data or search route.
+This component makes no API calls. SearchView handles loading and service errors
+and renders the list once results are available on the protected home page.
 
 ## PlaceDetailsView
 
@@ -58,7 +57,7 @@ to the parent. Omit it until a real claim screen is available; the claim button
 is then hidden. Opening this action does not submit a claim.
 
 PlaceDetailsView does not fetch place details or add routes. SearchView and
-PlaceApiClient will supply its data, and the claim owner will supply the claim
+PlaceApiClient supply its data, and the claim owner will supply the claim
 form. The diagram's display/open-review/open-claim operations are represented
 by the `place` prop, review button, and claim callback respectively.
 
@@ -113,5 +112,44 @@ arrays are supported; any malformed item rejects the whole search result.
 Provider place IDs are strings, not UUIDs, and reserved path characters are
 encoded. Network and HTTP errors propagate through the existing API helper.
 
-No production mock data or new routes are added. SearchView is the next step
-for connecting this client to PlaceListView and PlaceDetailsView.
+No production mock data or new routes are added. SearchView connects this client
+to PlaceListView and PlaceDetailsView on the existing home route.
+
+## SearchView
+
+`app/components/places/search-view.tsx` follows the existing views: exported typed
+props, Fluent UI styles/tokens, injected API clients for tests, and explicit
+loading/error/empty states. The protected `/` home route now renders SearchView.
+No request runs automatically on mount.
+
+Choose location text or coordinates, enter a radius in meters (default 1000),
+and submit Search. Numeric fields remain strings until submission so a blank
+coordinate cannot silently become zero. Coordinates must form a valid pair;
+zero and decimal coordinates are supported. Only the chosen location mode is
+sent, avoiding the proposed backend's unresolved text/coordinate precedence.
+
+Selecting a type or pressing Clear filter reruns the last submitted search with
+the new type (or all types). Before the first submission, these actions only
+set the upcoming search's filter. Editing a location/radius does not change the
+active search until Search is submitted. Filtering uses the backend rather than
+discarding results locally. Search retry also uses the last submitted criteria.
+
+Selecting a result highlights it and calls getPlaceDetails. Successful details
+are passed to PlaceDetailsView, which owns opening reviews. Errors retain the
+selected ID so Retry details requests that place again. A new search/filter
+clears selection and unmounts any old review panel. Search/detail sequence
+counters ignore obsolete responses and failures, including after unmount; they
+do not cancel network requests. Both panels use the same selection state so a
+future MapView can share the list's selection handler.
+
+Optional `reviewApiClient` and `onOpenClaim` props pass through to PlaceDetailsView.
+The home page supplies neither: reviews use the existing default client and the
+claim action stays hidden until a real claim form is connected. MapView is still
+separate work. No map or production fixture data is included.
+
+The place HTTP contract remains proposed. Missing backend endpoints show errors
+and retry controls, not sample results. Tests cover form validation, coordinates,
+filters, list/detail/review integration, retries, empty results, stale responses,
+the route guard, and the default client's authenticated request/response mapping.
+
+Run `npm test`, `npm run typecheck`, and `npm run build` to verify.

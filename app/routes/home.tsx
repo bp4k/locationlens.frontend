@@ -1,4 +1,4 @@
-import { makeStyles, Text, tokens } from "@fluentui/react-components";
+import { SearchView } from "../components/places/search-view";
 import type { Route } from "./+types/home";
 
 export function meta({}: Route.MetaArgs) {
@@ -8,18 +8,7 @@ export function meta({}: Route.MetaArgs) {
   ];
 }
 
-const useStyles = makeStyles({
-  container: {
-    padding: tokens.spacingVerticalXXL,
-  },
-});
-
 export default function Home() {
-  const styles = useStyles();
-
-  return (
-    <div className={styles.container}>
-      <Text size={500}>Welcome to LocationLens.</Text>
-    </div>
-  );
+  // The protected layout handles authentication; search starts on user action.
+  return <SearchView />;
 }

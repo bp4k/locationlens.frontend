@@ -27,6 +27,7 @@ function client(): ReviewApiClient {
     getUserReviewHistory: vi.fn().mockResolvedValue([]),
     submitReview: vi.fn().mockImplementation(async (placeId, rating, text) => ({
       reviewId: "review-1",
+      userId: "6a7d1f76-ef09-49ee-a310-25850196740a",
       placeId,
       rating,
       text,
@@ -93,6 +94,7 @@ describe("PlaceDetailsView", () => {
     expect(api.getPlaceReviews).toHaveBeenLastCalledWith(cafe.placeId);
     await act(async () => resolve([{
       reviewId: "old-review",
+      userId: "6a7d1f76-ef09-49ee-a310-25850196740a",
       placeId: park.placeId,
       rating: 4,
       text: "Old place review",
