@@ -5,6 +5,7 @@ import { saveSession } from "../auth/token-storage";
 // Exact JSON representation of the backend's ReviewResponse record.
 const response = {
   review_id: "6a7d1f76-ef09-49ee-a310-25850196740a",
+  user_id: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   place_id: "place-123",
   rating: 5,
   text: "Great!",
@@ -12,6 +13,7 @@ const response = {
 };
 const model = {
   reviewId: response.review_id,
+  userId: response.user_id,
   placeId: response.place_id,
   rating: response.rating,
   text: response.text,
@@ -29,7 +31,7 @@ function setup(body: unknown, status = 200) {
 }
 
 describe("ReviewApiClient backend contract", () => {
-  it("gets place reviews and maps snake_case fields without inventing an author", async () => {
+  it("gets place reviews and maps snake_case fields including the author UUID", async () => {
     const fetch = setup([response]);
     expect(await reviewApiClient.getPlaceReviews("place/a?b")).toEqual([model]);
     expect(fetch.mock.calls[0][0]).toBe(
@@ -38,7 +40,7 @@ describe("ReviewApiClient backend contract", () => {
     expect(
       new Headers(fetch.mock.calls[0][1]?.headers).get("Authorization"),
     ).toBe("Bearer authenticated-token");
-    expect(model).not.toHaveProperty("userId");
+    expect(model.userId).toBe(response.user_id);
   });
   it("loads only the signed-in user's history with no user parameter", async () => {
     const fetch = setup([response]);
@@ -135,6 +137,8 @@ describe("ReviewApiClient validation", () => {
     null,
     { ...response, review_id: undefined },
     { ...response, place_id: undefined },
+    { ...response, user_id: undefined },
+    { ...response, user_id: "invalid-uuid" },
     { ...response, rating: "5" },
     { ...response, rating: 6 },
     { ...response, rating: 1.5 },

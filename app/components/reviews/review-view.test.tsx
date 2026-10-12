@@ -10,6 +10,7 @@ import type { ReviewModel } from "../../types/review";
 
 const existing: ReviewModel = {
   reviewId: "review-1",
+  userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   rating: 4,
   text: "A lovely park.",
   createdAt: "2026-10-09T12:00:00Z",

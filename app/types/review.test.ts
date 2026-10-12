@@ -4,6 +4,7 @@ import { parseReviewModel, parseReviewModels } from "./review";
 // Fields/serialization match the backend's public ReviewResponse record.
 const response = {
   review_id: "6a7d1f76-ef09-49ee-a310-25850196740a",
+  user_id: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   place_id: "ChIJ_place_123",
   rating: 4,
   text: "A lovely park.",
@@ -12,6 +13,7 @@ const response = {
 
 const model = {
   reviewId: response.review_id,
+  userId: response.user_id,
   placeId: response.place_id,
   rating: response.rating,
   text: response.text,
@@ -32,10 +34,10 @@ describe("ReviewModel", () => {
     expect(parsed.text).toBe(text);
   });
 
-  it("does not expose entity-only author fields or retain the source object", () => {
-    const source = { ...response, user_id: "private-id", userId: "private-id" };
+  it("uses the wire author UUID and does not retain the source object", () => {
+    const source = { ...response, userId: "ignored-camel-case" };
     const parsed = parseReviewModel(source);
-    expect(parsed).not.toHaveProperty("userId");
+    expect(parsed.userId).toBe(response.user_id);
     expect(parsed).not.toHaveProperty("user_id");
     source.text = "Changed source";
     expect(parsed.text).toBe(response.text);
@@ -50,6 +52,10 @@ describe("ReviewModel", () => {
 
   it.each([
     { review_id: " " },
+    { review_id: "not-a-uuid" },
+    { user_id: undefined },
+    { user_id: "not-a-uuid" },
+    { user_id: null },
     { place_id: " " },
     { rating: "4" },
     { rating: 0 },
