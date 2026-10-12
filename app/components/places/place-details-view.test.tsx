@@ -27,6 +27,7 @@ function client(): ReviewApiClient {
     getUserReviewHistory: vi.fn().mockResolvedValue([]),
     submitReview: vi.fn().mockImplementation(async (placeId, rating, text) => ({
       reviewId: "review-1",
+      userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
       placeId,
       rating,
       text,

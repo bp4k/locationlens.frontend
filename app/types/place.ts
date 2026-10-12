@@ -31,41 +31,55 @@ export interface PlaceResponse {
   types: PlaceTypeModel[];
 }
 
-function isCoordinate(value: unknown, limit: number): value is number {
+export function isPlaceType(value: unknown): value is PlaceTypeModel {
+  return PLACE_TYPES.some((type) => type === value);
+}
+
+/** Coordinates use decimal degrees, including zero and fractional values. */
+export function isLatitude(value: unknown): value is number {
   return (
     typeof value === "number" &&
     Number.isFinite(value) &&
-    Math.abs(value) <= limit
+    Math.abs(value) <= 90
+  );
+}
+
+export function isLongitude(value: unknown): value is number {
+  return (
+    typeof value === "number" &&
+    Number.isFinite(value) &&
+    Math.abs(value) <= 180
+  );
+}
+
+function isPlaceResponse(value: unknown): value is PlaceResponse {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const place = value as Record<string, unknown>;
+  return (
+    typeof place.place_id === "string" &&
+    place.place_id.trim().length > 0 &&
+    typeof place.name === "string" &&
+    place.name.trim().length > 0 &&
+    typeof place.address === "string" &&
+    isLatitude(place.latitude) &&
+    isLongitude(place.longitude) &&
+    Array.isArray(place.types) &&
+    place.types.every(isPlaceType)
   );
 }
 
 export function parsePlaceModel(response: unknown): PlaceModel {
-  if (!response || typeof response !== "object" || Array.isArray(response)) {
-    throw new Error("The server returned an invalid place response.");
-  }
-  const place = response as Record<string, unknown>;
-  if (
-    typeof place.place_id !== "string" ||
-    !place.place_id.trim() ||
-    typeof place.name !== "string" ||
-    typeof place.address !== "string" ||
-    !isCoordinate(place.latitude, 90) ||
-    !isCoordinate(place.longitude, 180) ||
-    !Array.isArray(place.types) ||
-    !place.types.every(
-      (type) =>
-        typeof type === "string" && PLACE_TYPES.some((known) => known === type),
-    )
-  ) {
+  if (!isPlaceResponse(response)) {
     throw new Error("The server returned an invalid place response.");
   }
   return {
-    placeId: place.place_id,
-    name: place.name,
-    address: place.address,
-    latitude: place.latitude,
-    longitude: place.longitude,
-    types: [...place.types] as PlaceTypeModel[],
+    placeId: response.place_id,
+    name: response.name,
+    address: response.address,
+    latitude: response.latitude,
+    longitude: response.longitude,
+    // Do not let a caller mutate the response's category array through the model.
+    types: [...response.types],
   };
 }
 

@@ -24,9 +24,8 @@ highlights the selection whether it came from the list or map.
 Coordinate this shared type with Albert and confirm field names and enum values
 with the backend owner before connecting PlaceApiClient.
 
-This component makes no API calls. SearchView will handle loading and service
-errors and render the list once results are available. It is not mounted on the
-placeholder home page yet; there is no production sample data or search route.
+This component makes no API calls. SearchView handles loading and service errors
+and renders the list once results are available on the protected home page.
 
 ## PlaceDetailsView
 
@@ -58,6 +57,99 @@ to the parent. Omit it until a real claim screen is available; the claim button
 is then hidden. Opening this action does not submit a claim.
 
 PlaceDetailsView does not fetch place details or add routes. SearchView and
-PlaceApiClient will supply its data, and the claim owner will supply the claim
+PlaceApiClient supply its data, and the claim owner will supply the claim
 form. The diagram's display/open-review/open-claim operations are represented
 by the `place` prop, review button, and claim callback respectively.
+
+## PlaceApiClient (proposed HTTP contract)
+
+`app/lib/place-api.ts` follows ReviewApiClient: asynchronous operations, input
+validation with `ApiError` status 400, shared authenticated `apiFetch`, and
+runtime response parsing in the model file. Both operations return camelCase
+PlaceModel data for the existing list and details views.
+
+**No place endpoints exist in backend master as inspected at commit 89333cd.**
+The pending backend branch `codex/place-review-contracts`, commit 4d27a4b,
+defines PlaceResponse and PlaceType, but implements no place controller.
+The URLs and search rules below are proposed and need agreement with Aaron
+before live integration. Tests verify this proposed contract using mocked HTTP;
+they do not demonstrate a working backend/provider integration.
+
+| Operation | Proposed path passed to apiFetch | Response |
+| --- | --- | --- |
+| search(criteria) | GET /v1/places/search | PlaceResponse[] |
+| getPlaceDetails(placeId) | GET /v1/places/{encodedPlaceId} | PlaceResponse |
+
+The API base already includes `/api`. Search uses URL-encoded query parameters:
+
+- `location_text`: optional trimmed location text.
+- `latitude` and `longitude`: optional complete coordinate pair in decimal degrees.
+- `radius_meters`: required positive safe integer in meters.
+- `place_type`: optional PlaceTypeModel enum name; omit for all types.
+
+Supply nonblank location text or a valid coordinate pair. If coordinates are
+provided, both must be valid even when text is also supplied. Latitude is within
+[-90, 90], longitude within [-180, 180], including zero. Backend precedence when
+both text and coordinates are supplied, maximum radius, and provider behavior
+remain to be agreed. These local checks do not replace backend validation.
+
+Example input:
+
+```ts
+await placeApiClient.search({
+  latitude: 33.775,
+  longitude: -84.396,
+  radiusMeters: 1000,
+  placeType: "PARK",
+});
+```
+
+The pending PlaceResponse JSON contains `place_id`, `name`, `address`,
+`latitude`, `longitude`, and `types`. `parsePlaceModel` checks nonblank IDs/names,
+string addresses, finite geographic coordinates, and supported category arrays.
+It maps `place_id` to `placeId` and copies the types array. Empty category/result
+arrays are supported; any malformed item rejects the whole search result.
+Provider place IDs are strings, not UUIDs, and reserved path characters are
+encoded. Network and HTTP errors propagate through the existing API helper.
+
+No production mock data or new routes are added. SearchView connects this client
+to PlaceListView and PlaceDetailsView on the existing home route.
+
+## SearchView
+
+`app/components/places/search-view.tsx` follows the existing views: exported typed
+props, Fluent UI styles/tokens, injected API clients for tests, and explicit
+loading/error/empty states. The protected `/` home route now renders SearchView.
+No request runs automatically on mount.
+
+Choose location text or coordinates, enter a radius in meters (default 1000),
+and submit Search. Numeric fields remain strings until submission so a blank
+coordinate cannot silently become zero. Coordinates must form a valid pair;
+zero and decimal coordinates are supported. Only the chosen location mode is
+sent, avoiding the proposed backend's unresolved text/coordinate precedence.
+
+Selecting a type or pressing Clear filter reruns the last submitted search with
+the new type (or all types). Before the first submission, these actions only
+set the upcoming search's filter. Editing a location/radius does not change the
+active search until Search is submitted. Filtering uses the backend rather than
+discarding results locally. Search retry also uses the last submitted criteria.
+
+Selecting a result highlights it and calls getPlaceDetails. Successful details
+are passed to PlaceDetailsView, which owns opening reviews. Errors retain the
+selected ID so Retry details requests that place again. A new search/filter
+clears selection and unmounts any old review panel. Search/detail sequence
+counters ignore obsolete responses and failures, including after unmount; they
+do not cancel network requests. Both panels use the same selection state so a
+future MapView can share the list's selection handler.
+
+Optional `reviewApiClient` and `onOpenClaim` props pass through to PlaceDetailsView.
+The home page supplies neither: reviews use the existing default client and the
+claim action stays hidden until a real claim form is connected. MapView is still
+separate work. No map or production fixture data is included.
+
+The place HTTP contract remains proposed. Missing backend endpoints show errors
+and retry controls, not sample results. Tests cover form validation, coordinates,
+filters, list/detail/review integration, retries, empty results, stale responses,
+the route guard, and the default client's authenticated request/response mapping.
+
+Run `npm test`, `npm run typecheck`, and `npm run build` to verify.
