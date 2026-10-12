@@ -61,3 +61,57 @@ PlaceDetailsView does not fetch place details or add routes. SearchView and
 PlaceApiClient will supply its data, and the claim owner will supply the claim
 form. The diagram's display/open-review/open-claim operations are represented
 by the `place` prop, review button, and claim callback respectively.
+
+## PlaceApiClient (proposed HTTP contract)
+
+`app/lib/place-api.ts` follows ReviewApiClient: asynchronous operations, input
+validation with `ApiError` status 400, shared authenticated `apiFetch`, and
+runtime response parsing in the model file. Both operations return camelCase
+PlaceModel data for the existing list and details views.
+
+**No place endpoints exist in backend master as inspected at commit 89333cd.**
+The pending backend branch `codex/place-review-contracts`, commit 4d27a4b,
+defines PlaceResponse and PlaceType, but implements no place controller.
+The URLs and search rules below are proposed and need agreement with Aaron
+before live integration. Tests verify this proposed contract using mocked HTTP;
+they do not demonstrate a working backend/provider integration.
+
+| Operation | Proposed path passed to apiFetch | Response |
+| --- | --- | --- |
+| search(criteria) | GET /v1/places/search | PlaceResponse[] |
+| getPlaceDetails(placeId) | GET /v1/places/{encodedPlaceId} | PlaceResponse |
+
+The API base already includes `/api`. Search uses URL-encoded query parameters:
+
+- `location_text`: optional trimmed location text.
+- `latitude` and `longitude`: optional complete coordinate pair in decimal degrees.
+- `radius_meters`: required positive safe integer in meters.
+- `place_type`: optional PlaceTypeModel enum name; omit for all types.
+
+Supply nonblank location text or a valid coordinate pair. If coordinates are
+provided, both must be valid even when text is also supplied. Latitude is within
+[-90, 90], longitude within [-180, 180], including zero. Backend precedence when
+both text and coordinates are supplied, maximum radius, and provider behavior
+remain to be agreed. These local checks do not replace backend validation.
+
+Example input:
+
+```ts
+await placeApiClient.search({
+  latitude: 33.775,
+  longitude: -84.396,
+  radiusMeters: 1000,
+  placeType: "PARK",
+});
+```
+
+The pending PlaceResponse JSON contains `place_id`, `name`, `address`,
+`latitude`, `longitude`, and `types`. `parsePlaceModel` checks nonblank IDs/names,
+string addresses, finite geographic coordinates, and supported category arrays.
+It maps `place_id` to `placeId` and copies the types array. Empty category/result
+arrays are supported; any malformed item rejects the whole search result.
+Provider place IDs are strings, not UUIDs, and reserved path characters are
+encoded. Network and HTTP errors propagate through the existing API helper.
+
+No production mock data or new routes are added. SearchView is the next step
+for connecting this client to PlaceListView and PlaceDetailsView.
