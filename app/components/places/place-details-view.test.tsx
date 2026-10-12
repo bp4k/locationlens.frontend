@@ -93,6 +93,7 @@ describe("PlaceDetailsView", () => {
     expect(api.getPlaceReviews).toHaveBeenLastCalledWith(cafe.placeId);
     await act(async () => resolve([{
       reviewId: "old-review",
+      userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
       placeId: park.placeId,
       rating: 4,
       text: "Old place review",
