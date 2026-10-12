@@ -3,6 +3,7 @@ import { Button, makeStyles, tokens } from "@fluentui/react-components";
 import type { PlaceModel } from "../../types/place";
 import type { ReviewApiClient } from "../../lib/review-api";
 import { ReviewView } from "../reviews/review-view";
+import { ClaimView } from "../claims/claim-view";
 import { placeTypeLabels } from "./place-type-labels";
 
 const useStyles = makeStyles({
@@ -23,7 +24,7 @@ const useStyles = makeStyles({
 export interface PlaceDetailsViewProps {
   /** SearchView supplies the same selection used by the map and result list. */
   place?: PlaceModel;
-  /** Omit until the parent can open a claim form; no placeholder action is shown. */
+  /** Optional navigation override; otherwise open the claim form inline. */
   onOpenClaim?: (placeId: string) => void;
   /** Passed to ReviewView for isolated tests; production uses its default client. */
   apiClient?: ReviewApiClient;
@@ -66,10 +67,12 @@ function SelectedPlaceDetails({
 }: PlaceDetailsViewProps & { place: PlaceModel }) {
   const styles = useStyles();
   const id = useId();
-  const [reviewPanel, setReviewPanel] = useState<"unopened" | "open" | "hidden">(
-    "unopened",
-  );
+  const [reviewPanel, setReviewPanel] = useState<
+    "unopened" | "open" | "hidden"
+  >("unopened");
   const reviewsOpen = reviewPanel === "open";
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [claimOpened, setClaimOpened] = useState(false);
 
   return (
     <section className={styles.container} aria-labelledby={`${id}-heading`}>
@@ -90,12 +93,28 @@ function SelectedPlaceDetails({
         >
           {reviewsOpen ? "Hide reviews" : "Show reviews / write a review"}
         </Button>
-        {onOpenClaim && (
-          <Button type="button" onClick={() => onOpenClaim(place.placeId)}>
-            Claim this business
-          </Button>
-        )}
+        <Button
+          type="button"
+          aria-expanded={onOpenClaim ? undefined : claimOpen}
+          aria-controls={onOpenClaim ? undefined : `${id}-claim`}
+          onClick={() => {
+            if (onOpenClaim) onOpenClaim(place.placeId);
+            else {
+              setClaimOpened(true);
+              setClaimOpen(!claimOpen);
+            }
+          }}
+        >
+          {claimOpen ? "Hide claim form" : "Claim this business"}
+        </Button>
       </div>
+      {!onOpenClaim && (
+        <div id={`${id}-claim`} hidden={!claimOpen}>
+          {claimOpened && (
+            <ClaimView placeId={place.placeId} placeName={place.name} />
+          )}
+        </div>
+      )}
       <div id={`${id}-reviews`} hidden={!reviewsOpen}>
         {/* Mount on first opening to avoid fetching reviews for every selection.
             Keep mounted while hidden so toggling preserves the current draft. */}
