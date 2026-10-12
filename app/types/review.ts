@@ -1,10 +1,11 @@
 /**
  * Public review data used by the view. Matches the backend ReviewResponse,
- * rather than the persistence entity: author/user ID is not exposed by the API.
+ * including the author UUID supplied by the server.
  * UUIDs and Instants remain strings so timestamp precision is not lost.
  */
 export interface ReviewModel {
   reviewId: string;
+  userId: string;
   rating: number;
   text: string;
   createdAt: string;
@@ -15,21 +16,27 @@ export type ReviewTarget =
   | { kind: "place"; placeId: string }
   | { kind: "history" };
 
-/** ReviewResponse's exact wire shape; the backend deliberately omits user ID. */
+/** ReviewResponse's exact wire shape. */
 export interface ReviewResponse {
   review_id: string;
+  user_id: string;
   place_id: string;
   rating: number;
   text: string;
   created_at: string;
 }
 
+const uuidPattern =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 function isReviewResponse(value: unknown): value is ReviewResponse {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const review = value as Record<string, unknown>;
   return (
     typeof review.review_id === "string" &&
-    review.review_id.trim().length > 0 &&
+    uuidPattern.test(review.review_id) &&
+    typeof review.user_id === "string" &&
+    uuidPattern.test(review.user_id) &&
     typeof review.place_id === "string" &&
     review.place_id.trim().length > 0 &&
     typeof review.rating === "number" &&
@@ -48,6 +55,7 @@ export function parseReviewModel(response: unknown): ReviewModel {
   }
   return {
     reviewId: response.review_id,
+    userId: response.user_id,
     placeId: response.place_id,
     rating: response.rating,
     text: response.text,
