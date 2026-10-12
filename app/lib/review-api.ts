@@ -1,54 +1,8 @@
 import { apiFetch, ApiError } from "./api-client";
 import type { ReviewModel } from "../types/review";
+import { parseReviewModel, parseReviewModels } from "../types/review";
 
 export { ApiError as ReviewApiError };
-
-/** ReviewResponse's exact wire shape; the backend deliberately omits user ID. */
-interface ReviewResponse {
-  review_id: string;
-  place_id: string;
-  rating: number;
-  text: string;
-  created_at: string;
-}
-
-function isReviewResponse(value: unknown): value is ReviewResponse {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const review = value as Record<string, unknown>;
-  return (
-    typeof review.review_id === "string" &&
-    review.review_id.trim().length > 0 &&
-    typeof review.place_id === "string" &&
-    review.place_id.trim().length > 0 &&
-    typeof review.rating === "number" &&
-    Number.isInteger(review.rating) &&
-    review.rating >= 1 &&
-    review.rating <= 5 &&
-    typeof review.text === "string" &&
-    typeof review.created_at === "string" &&
-    Number.isFinite(Date.parse(review.created_at))
-  );
-}
-
-function toReviewModel(response: unknown): ReviewModel {
-  if (!isReviewResponse(response)) {
-    throw new Error("The server returned an invalid review response.");
-  }
-  return {
-    reviewId: response.review_id,
-    placeId: response.place_id,
-    rating: response.rating,
-    text: response.text,
-    createdAt: response.created_at,
-  };
-}
-
-function toReviewList(response: unknown): ReviewModel[] {
-  if (!Array.isArray(response)) {
-    throw new Error("The server returned an invalid review list.");
-  }
-  return response.map(toReviewModel);
-}
 
 function validatePlaceId(placeId: string): void {
   if (!placeId.trim()) {
@@ -91,11 +45,11 @@ export const reviewApiClient: ReviewApiClient = {
     const reviews = await apiFetch<unknown>(
       `/v1/reviews/place/${encodeURIComponent(placeId)}`,
     );
-    return toReviewList(reviews);
+    return parseReviewModels(reviews);
   },
   getUserReviewHistory: async () => {
     const reviews = await apiFetch<unknown>("/v1/reviews/history");
-    return toReviewList(reviews);
+    return parseReviewModels(reviews);
   },
   submitReview: async (placeId, rating, text) => {
     validateSubmission(placeId, rating, text);
@@ -104,6 +58,6 @@ export const reviewApiClient: ReviewApiClient = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ place_id: placeId, rating, text }),
     });
-    return toReviewModel(review);
+    return parseReviewModel(review);
   },
 };
