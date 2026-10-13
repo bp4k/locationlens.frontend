@@ -1,7 +1,7 @@
 import { PlaceTypeModel } from "../types/place";
 import { describe, expect, it, vi } from "vitest";
 import { saveSession } from "../auth/token-storage";
-import type { SearchCriteriaModel } from "../types/search-criteria";
+import { SearchCriteriaModel, type SearchCriteriaInput } from "../types/search-criteria";
 import { placeApiClient } from "./place-api";
 
 // Matches the pending backend PlaceResponse DTO, not a UI-shaped mock response.
@@ -21,7 +21,7 @@ const model = {
   longitude: response.longitude,
   types: response.types,
 };
-const criteria: SearchCriteriaModel = { locationText: "Atlanta", radiusMeters: 1000 };
+const criteria: SearchCriteriaInput = { locationText: "Atlanta", radiusMeters: 1000 };
 
 function setup(body: unknown, status = 200) {
   vi.stubEnv("VITE_APP_API_URL", "http://localhost:8080/api");
@@ -58,6 +58,14 @@ describe("PlaceApiClient proposed contract", () => {
     expect(Object.fromEntries(url.searchParams)).toEqual({
       latitude: "0", longitude: "-84.373", radius_meters: "500",
     });
+  });
+
+  it("accepts the immutable value object without changing query serialization", async () => {
+    const fetch = setup([]);
+    const value = new SearchCriteriaModel(criteria);
+    await placeApiClient.search(value);
+    expect(value.isValid()).toBe(true);
+    expect(new URL(fetch.mock.calls[0][0] as string).searchParams.get("radius_meters")).toBe("1000");
   });
 
   it("encodes provider place IDs and maps details", async () => {
@@ -98,10 +106,11 @@ describe("PlaceApiClient input validation", () => {
     { ...criteria, radiusMeters: -1 },
     { ...criteria, radiusMeters: 1.5 },
     { ...criteria, radiusMeters: Infinity },
+    { ...criteria, radiusMeters: 2_147_483_648 },
     { ...criteria, placeType: "UNKNOWN" },
   ])("rejects invalid criteria %j before HTTP", async (input) => {
     const fetch = setup([]);
-    await expect(placeApiClient.search(input as SearchCriteriaModel))
+    await expect(placeApiClient.search(input as SearchCriteriaInput))
       .rejects.toMatchObject({ status: 400 });
     expect(fetch).not.toHaveBeenCalled();
   });
