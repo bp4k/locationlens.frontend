@@ -10,9 +10,11 @@ const response = {
 };
 const model = {
   claimId: response.id,
-  userId: response.userId,
+  claimantUserId: response.userId,
   placeId: response.placeId,
   status: response.status,
+  submittedAt: null,
+  reviewedAt: null,
 };
 
 function setup(body: unknown = response, status = 200) {
