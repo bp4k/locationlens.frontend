@@ -41,7 +41,7 @@ export function PlaceDetailsView({
 
   if (!place) {
     return (
-      <section className={styles.container} aria-labelledby={headingId}>
+      <section className={`${styles.container} ll-place-details`} aria-labelledby={headingId}>
         <h2 id={headingId}>Place details</h2>
         <p>Select a place to see its details.</p>
       </section>
@@ -75,7 +75,7 @@ function SelectedPlaceDetails({
   const [claimOpened, setClaimOpened] = useState(false);
 
   return (
-    <section className={styles.container} aria-labelledby={`${id}-heading`}>
+    <section className={`${styles.container} ll-place-details`} aria-labelledby={`${id}-heading`}>
       <h2 id={`${id}-heading`}>{place.name}</h2>
       <p>{place.address}</p>
       {place.types.length > 0 && (

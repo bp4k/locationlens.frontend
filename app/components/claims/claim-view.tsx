@@ -80,7 +80,7 @@ function SelectedClaimView({
   }
 
   return (
-    <section className={styles.container} aria-labelledby={headingId}>
+    <section className={`${styles.container} ll-claim-panel`} aria-labelledby={headingId}>
       <h2 id={headingId}>Claim this business</h2>
       {!placeId?.trim() ? (
         <p>Select a place to submit a business claim.</p>
