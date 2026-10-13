@@ -1,15 +1,17 @@
 /** Supported categories shared with the backend PlaceType enum. */
-export const PLACE_TYPES = [
-  "RESTAURANT",
-  "BATHROOM",
-  "PARK",
-  "ATTRACTION",
-  "HOTEL",
-  "HOSPITAL",
-  "OTHER",
-] as const;
+export enum PlaceTypeModel {
+  RESTAURANT = "RESTAURANT",
+  BATHROOM = "BATHROOM",
+  PARK = "PARK",
+  ATTRACTION = "ATTRACTION",
+  HOTEL = "HOTEL",
+  HOSPITAL = "HOSPITAL",
+  OTHER = "OTHER",
+}
 
-export type PlaceTypeModel = (typeof PLACE_TYPES)[number];
+export const PLACE_TYPES: readonly PlaceTypeModel[] = Object.freeze(
+  Object.values(PlaceTypeModel),
+);
 
 /** Place IDs are opaque strings; Java Doubles are represented as JS numbers. */
 export interface PlaceModel {

@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../../types/place";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -14,9 +15,9 @@ vi.mock("./map-view", () => ({
 
 const park: PlaceModel = {
   placeId: "park-1", name: "Piedmont Park", address: "Park address",
-  latitude: 33.785, longitude: -84.373, types: ["PARK"],
+  latitude: 33.785, longitude: -84.373, types: [PlaceTypeModel.PARK],
 };
-const cafe: PlaceModel = { ...park, placeId: "cafe-1", name: "Campus Cafe", types: ["RESTAURANT"] };
+const cafe: PlaceModel = { ...park, placeId: "cafe-1", name: "Campus Cafe", types: [PlaceTypeModel.RESTAURANT] };
 
 function client(): PlaceApiClient {
   return {
@@ -89,7 +90,7 @@ describe("SearchView", () => {
     await user.selectOptions(screen.getByLabelText("Place type"), "PARK");
     expect(api.search).not.toHaveBeenCalled();
     await searchAtlanta(user);
-    expect(api.search).toHaveBeenLastCalledWith({ locationText: "Atlanta", radiusMeters: 1000, placeType: "PARK" });
+    expect(api.search).toHaveBeenLastCalledWith({ locationText: "Atlanta", radiusMeters: 1000, placeType: PlaceTypeModel.PARK });
     await user.clear(screen.getByLabelText("Location"));
     await user.type(screen.getByLabelText("Location"), "Decatur");
     await user.selectOptions(screen.getByLabelText("Place type"), "RESTAURANT");

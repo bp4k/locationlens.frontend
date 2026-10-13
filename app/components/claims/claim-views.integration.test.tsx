@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../../types/place";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -33,7 +34,7 @@ describe("claim views with the real API client", () => {
           address: "Atlanta",
           latitude: 33,
           longitude: -84,
-          types: ["RESTAURANT"],
+          types: [PlaceTypeModel.RESTAURANT],
         }}
       />,
     );

@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../../types/place";
 import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -12,7 +13,7 @@ const places: PlaceModel[] = [
     address: "1320 Monroe Drive",
     latitude: 33.785,
     longitude: -84.373,
-    types: ["PARK", "ATTRACTION"],
+    types: [PlaceTypeModel.PARK, PlaceTypeModel.ATTRACTION],
   },
   {
     placeId: "restaurant-1",
@@ -20,7 +21,7 @@ const places: PlaceModel[] = [
     address: "1 College Avenue",
     latitude: 33.775,
     longitude: -84.396,
-    types: ["RESTAURANT"],
+    types: [PlaceTypeModel.RESTAURANT],
   },
 ];
 

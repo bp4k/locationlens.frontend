@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../../types/place";
 import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -12,13 +13,13 @@ const park: PlaceModel = {
   address: "1320 Monroe Drive",
   latitude: 33.785,
   longitude: -84.373,
-  types: ["PARK", "ATTRACTION"],
+  types: [PlaceTypeModel.PARK, PlaceTypeModel.ATTRACTION],
 };
 const cafe: PlaceModel = {
   ...park,
   placeId: "cafe-1",
   name: "Campus Cafe",
-  types: ["RESTAURANT"],
+  types: [PlaceTypeModel.RESTAURANT],
 };
 
 function client(): ReviewApiClient {
