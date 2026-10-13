@@ -25,6 +25,9 @@ export function AccountMenu() {
           <MenuItem onClick={() => navigate("/reviews/history")}>
             My reviews
           </MenuItem>
+          <MenuItem onClick={() => navigate("/admin/claims")}>
+            Business claims (admin)
+          </MenuItem>
         </MenuList>
       </MenuPopover>
     </Menu>
