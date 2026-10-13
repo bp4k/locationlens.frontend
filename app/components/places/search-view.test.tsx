@@ -6,6 +6,12 @@ import type { PlaceApiClient } from "../../lib/place-api";
 import type { PlaceModel } from "../../types/place";
 import { SearchView } from "./search-view";
 
+// These tests exercise search orchestration. The real Google SDK is covered by
+// MapView's injected-library tests, keeping this suite independent of API keys.
+vi.mock("./map-view", () => ({
+  MapView: () => <section aria-label="Map test boundary" />,
+}));
+
 const park: PlaceModel = {
   placeId: "park-1", name: "Piedmont Park", address: "Park address",
   latitude: 33.785, longitude: -84.373, types: ["PARK"],
