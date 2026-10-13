@@ -1,0 +1,45 @@
+name: Claim end-to-end tests
+
+# Manual until the paired backend validation change is merged. Choose its feature
+# branch in backend_ref to test the two changes together before merging.
+on:
+  workflow_dispatch:
+    inputs:
+      backend_ref:
+        description: Backend branch or commit containing claim place verification
+        required: true
+        default: master
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  claims:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4.2.2
+        with:
+          repository: bp4k/locationlens
+          ref: ${{ inputs.backend_ref }}
+          path: .backend
+      - uses: actions/setup-java@v4.5.0
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - name: Build backend
+        working-directory: .backend
+        run: ./mvnw --batch-mode --no-transfer-progress -DskipTests package
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Run browser claim flows
+        run: npm run test:e2e
+        env:
+          E2E_BACKEND_DIR: ${{ github.workspace }}/.backend
