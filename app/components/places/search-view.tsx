@@ -13,7 +13,10 @@ import type { PlaceApiClient } from "../../lib/place-api";
 import type { ReviewApiClient } from "../../lib/review-api";
 import { isLatitude, isLongitude, PLACE_TYPES } from "../../types/place";
 import type { PlaceModel, PlaceTypeModel } from "../../types/place";
-import type { SearchCriteriaModel } from "../../types/search-criteria";
+import {
+  SearchCriteriaModel,
+  type SearchCriteriaInput,
+} from "../../types/search-criteria";
 import { PlaceListView } from "./place-list-view";
 import { PlaceDetailsView } from "./place-details-view";
 import { MapView } from "./map-view";
@@ -103,7 +106,13 @@ export function SearchView({
     };
   }, []);
 
-  async function runSearch(criteria: SearchCriteriaModel) {
+  async function runSearch(input: SearchCriteriaInput) {
+    const criteria = new SearchCriteriaModel(input);
+    const validationError = criteria.getValidationError();
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
     const sequence = ++searchSequence.current;
     submittedCriteria.current = criteria;
     setFormError(undefined);
@@ -133,7 +142,7 @@ export function SearchView({
       setFormError("Enter a positive whole-number search radius in meters.");
       return;
     }
-    const criteria: SearchCriteriaModel = { radiusMeters, placeType };
+    const criteria: SearchCriteriaInput = { radiusMeters, placeType };
     // Send only the chosen location mode, avoiding text/coordinate precedence
     // assumptions in the proposed backend contract. Zero coordinates are valid.
     if (mode === "text") {
