@@ -27,7 +27,7 @@ function client(): ReviewApiClient {
     getUserReviewHistory: vi.fn().mockResolvedValue([]),
     submitReview: vi.fn().mockImplementation(async (placeId, rating, text) => ({
       reviewId: "review-1",
-      userId: "6a7d1f76-ef09-49ee-a310-25850196740a",
+      userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
       placeId,
       rating,
       text,
@@ -118,18 +118,14 @@ describe("PlaceDetailsView", () => {
     await user.click(screen.getByRole("button", { name: /Show reviews/ }));
     expect(await screen.findByLabelText("Your experience")).toHaveValue("");
     expect(api.getPlaceReviews).toHaveBeenLastCalledWith(cafe.placeId);
-    await act(async () =>
-      resolve([
-        {
-          reviewId: "old-review",
-          userId: "6a7d1f76-ef09-49ee-a310-25850196740a",
-          placeId: park.placeId,
-          rating: 4,
-          text: "Old place review",
-          createdAt: "2026-10-11T12:00:00Z",
-        },
-      ]),
-    );
+    await act(async () => resolve([{
+      reviewId: "old-review",
+      userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
+      placeId: park.placeId,
+      rating: 4,
+      text: "Old place review",
+      createdAt: "2026-10-11T12:00:00Z",
+    }]));
     expect(screen.queryByText("Old place review")).not.toBeInTheDocument();
     rerender(<PlaceDetailsView place={park} apiClient={api} />);
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
