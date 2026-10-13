@@ -40,7 +40,9 @@ describe("PlaceDetailsView", () => {
   it("waits for selection without making review requests", () => {
     const api = client();
     render(<PlaceDetailsView apiClient={api} />);
-    expect(screen.getByText("Select a place to see its details.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Select a place to see its details."),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(api.getPlaceReviews).not.toHaveBeenCalled();
   });
@@ -49,12 +51,24 @@ describe("PlaceDetailsView", () => {
     const user = userEvent.setup();
     const onOpenClaim = vi.fn();
     const { rerender } = render(<PlaceDetailsView place={park} />);
-    expect(screen.getByRole("heading", { name: park.name })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: park.name }),
+    ).toBeInTheDocument();
     expect(screen.getByText(park.address)).toBeInTheDocument();
     expect(screen.getByText("Park · Attraction")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Claim this business" })).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Claim this business" }),
+    );
+    expect(
+      screen.getByRole("button", { name: "Submit business claim" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Selected place:", { exact: false }),
+    ).toHaveTextContent(park.name);
     rerender(<PlaceDetailsView place={cafe} onOpenClaim={onOpenClaim} />);
-    await user.click(screen.getByRole("button", { name: "Claim this business" }));
+    await user.click(
+      screen.getByRole("button", { name: "Claim this business" }),
+    );
     expect(onOpenClaim).toHaveBeenCalledExactlyOnceWith(cafe.placeId);
   });
 
@@ -70,11 +84,19 @@ describe("PlaceDetailsView", () => {
     await user.click(screen.getByRole("button", { name: "Hide reviews" }));
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: /Show reviews/ }));
-    expect(screen.getByLabelText("Your experience")).toHaveValue("Lovely park.");
+    expect(screen.getByLabelText("Your experience")).toHaveValue(
+      "Lovely park.",
+    );
     expect(api.getPlaceReviews).toHaveBeenCalledTimes(1);
     await user.click(screen.getByRole("button", { name: "Submit review" }));
-    expect(api.submitReview).toHaveBeenCalledExactlyOnceWith(park.placeId, 5, "Lovely park.");
-    expect(await screen.findByText("Your review was submitted.")).toBeInTheDocument();
+    expect(api.submitReview).toHaveBeenCalledExactlyOnceWith(
+      park.placeId,
+      5,
+      "Lovely park.",
+    );
+    expect(
+      await screen.findByText("Your review was submitted."),
+    ).toBeInTheDocument();
   });
 
   it("resets drafts on selection changes and ignores an old place's pending reviews", async () => {
@@ -82,9 +104,13 @@ describe("PlaceDetailsView", () => {
     const api = client();
     let resolve!: (reviews: ReviewModel[]) => void;
     vi.mocked(api.getPlaceReviews).mockReturnValueOnce(
-      new Promise<ReviewModel[]>((done) => { resolve = done; }),
+      new Promise<ReviewModel[]>((done) => {
+        resolve = done;
+      }),
     );
-    const { rerender } = render(<PlaceDetailsView place={park} apiClient={api} />);
+    const { rerender } = render(
+      <PlaceDetailsView place={park} apiClient={api} />,
+    );
     await user.click(screen.getByRole("button", { name: /Show reviews/ }));
     await user.type(screen.getByLabelText("Your experience"), "Old draft");
     rerender(<PlaceDetailsView place={cafe} apiClient={api} />);
@@ -106,6 +132,8 @@ describe("PlaceDetailsView", () => {
     await user.click(screen.getByRole("button", { name: /Show reviews/ }));
     expect(await screen.findByLabelText("Your experience")).toHaveValue("");
     rerender(<PlaceDetailsView apiClient={api} />);
-    expect(screen.getByText("Select a place to see its details.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Select a place to see its details."),
+    ).toBeInTheDocument();
   });
 });
