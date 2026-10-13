@@ -158,7 +158,7 @@ export function MapView({ places, selectedPlaceId, onSelect, loadMaps = loadGoog
   }, [selectedPlaceId, places, status]);
 
   return (
-    <section className={styles.container} aria-labelledby={`${id}-heading`}>
+    <section className={`${styles.container} ll-map`} aria-labelledby={`${id}-heading`}>
       <h2 id={`${id}-heading`}>Map</h2>
       <p>Select a marker or a place in the list to see its details.</p>
       <Button type="button" disabled={status !== "ready" || places.length === 0} onClick={centerMap}>

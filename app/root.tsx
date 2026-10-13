@@ -45,7 +45,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <FluentProvider theme={webLightTheme}>
+    <FluentProvider theme={{
+      ...webLightTheme,
+      fontFamilyBase: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      borderRadiusMedium: "12px",
+      borderRadiusSmall: "8px",
+    }}>
       <AuthProvider>
         <Outlet />
       </AuthProvider>

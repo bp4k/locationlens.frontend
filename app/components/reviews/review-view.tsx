@@ -22,9 +22,9 @@ import {
 
 const useStyles = makeStyles({
   container: {
-    maxWidth: "42rem",
+    maxWidth: "48rem",
     margin: "0 auto",
-    padding: tokens.spacingVerticalXXL,
+    padding: "clamp(20px, 4vw, 40px)",
     color: tokens.colorNeutralForeground1,
     display: "grid",
     rowGap: tokens.spacingVerticalM,
@@ -259,7 +259,7 @@ export const ReviewView = forwardRef<ReviewViewHandle, ReviewViewProps>(
 
     const history = read.target?.kind === "history";
     return (
-      <section className={styles.container} aria-labelledby={`${id}-heading`}>
+      <section className={`${styles.container} ll-review-panel`} aria-labelledby={`${id}-heading`}>
         <h2 id={`${id}-heading`}>
           {history ? "Your review history" : "Place reviews"}
         </h2>
