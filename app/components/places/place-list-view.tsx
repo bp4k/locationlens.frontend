@@ -21,7 +21,7 @@ const useStyles = makeStyles({
     gap: tokens.spacingVerticalXS,
     padding: tokens.spacingHorizontalM,
     border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusMedium,
+    borderRadius: "16px",
     backgroundColor: tokens.colorNeutralBackground1,
     color: tokens.colorNeutralForeground1,
     fontFamily: "inherit",
@@ -62,7 +62,7 @@ export function PlaceListView({
   const headingId = useId();
 
   return (
-    <section className={styles.container} aria-labelledby={headingId}>
+    <section className={`${styles.container} ll-place-list`} aria-labelledby={headingId}>
       <h2 id={headingId}>Places</h2>
       {places.length === 0 ? (
         <p>No places found. Try another location or adjust your filters.</p>

@@ -6,6 +6,7 @@ import {
 } from "@react-router/dev/routes";
 
 export default [
+  route("welcome", "routes/welcome.tsx"),
   route("login", "routes/login.tsx"),
   route("login-redirect", "routes/login-redirect.tsx"),
   layout("layouts/protected-layout.tsx", [

@@ -163,7 +163,7 @@ export function AdminClaimView({
   }
 
   return (
-    <main className={styles.container} aria-labelledby={headingId}>
+    <main className={`${styles.container} ll-admin-panel`} aria-labelledby={headingId}>
       <h1 id={headingId}>Pending business claims</h1>
       <p>Review requests to verify ownership of business locations.</p>
       <Button

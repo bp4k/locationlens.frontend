@@ -61,7 +61,13 @@ export default function Account() {
   }
 
   return (
-    <div className={styles.container}>
+    <div className={`${styles.container} ll-account-panel`}>
+      <div className="ll-profile-heading">
+        <span className="ll-profile-avatar" aria-hidden="true">
+          {user.first_name.charAt(0)}{user.last_name.charAt(0)}
+        </span>
+        <div><span className="ll-eyebrow">YOUR SPACE</span><h1>Your account</h1></div>
+      </div>
       <Table aria-label="Account details">
         <TableHeader>
           <TableRow>
