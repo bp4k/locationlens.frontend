@@ -199,7 +199,7 @@ export function AdminClaimView({
                 aria-label={`Claim for ${claim.placeId}`}
               >
                 <h2>Place: {claim.placeId}</h2>
-                <p>Submitted by: {claim.userId}</p>
+                <p>Submitted by: {claim.claimantUserId}</p>
                 <p>Claim reference: {claim.claimId}</p>
                 {decision?.claimId === claim.claimId ? (
                   <>
