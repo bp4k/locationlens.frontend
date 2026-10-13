@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../../types/place";
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -11,7 +12,7 @@ vi.mock("../../lib/google-maps", () => ({ loadGoogleMaps: vi.fn() }));
 
 const park: PlaceModel = {
   placeId: "park-1", name: "Piedmont Park", address: "Atlanta",
-  latitude: 33.785, longitude: -84.373, types: ["PARK"],
+  latitude: 33.785, longitude: -84.373, types: [PlaceTypeModel.PARK],
 };
 const cafe: PlaceModel = { ...park, placeId: "cafe-1", name: "Campus Cafe", longitude: -84.39 };
 

@@ -1,3 +1,4 @@
+import { PlaceTypeModel } from "../types/place";
 import { describe, expect, it, vi } from "vitest";
 import { saveSession } from "../auth/token-storage";
 import type { SearchCriteriaModel } from "../types/search-criteria";
@@ -10,7 +11,7 @@ const response = {
   address: "1320 Monroe Drive",
   latitude: 33.785,
   longitude: -84.373,
-  types: ["PARK", "ATTRACTION"],
+  types: [PlaceTypeModel.PARK, PlaceTypeModel.ATTRACTION],
 };
 const model = {
   placeId: response.place_id,
@@ -36,7 +37,7 @@ describe("PlaceApiClient proposed contract", () => {
   it("encodes text/filters and maps the wire response with bearer auth", async () => {
     const fetch = setup([response]);
     const results = await placeApiClient.search({
-      ...criteria, locationText: "  Atlanta & Decatur?  ", placeType: "PARK",
+      ...criteria, locationText: "  Atlanta & Decatur?  ", placeType: PlaceTypeModel.PARK,
     });
     expect(results).toEqual([model]);
     const url = new URL(fetch.mock.calls[0][0] as string);

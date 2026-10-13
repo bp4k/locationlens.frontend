@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLACE_TYPES, parsePlaceModel, parsePlaceModels } from "./place";
+import { PlaceTypeModel, isPlaceType, PLACE_TYPES, parsePlaceModel, parsePlaceModels } from "./place";
 
 const response = {
   place_id: "ChIJ/place?123",
@@ -77,4 +77,18 @@ describe("PlaceModel backend contract", () => {
       "invalid place response",
     );
   });
+});
+
+describe("PlaceTypeModel enumeration", () => {
+  it("exposes exactly the seven backend values at runtime", () => {
+    expect(Object.values(PlaceTypeModel)).toEqual([
+      "RESTAURANT", "BATHROOM", "PARK", "ATTRACTION", "HOTEL", "HOSPITAL", "OTHER",
+    ]);
+    expect(PLACE_TYPES).toEqual(Object.values(PlaceTypeModel));
+  });
+  it.each(["park", "UNKNOWN", "", null, undefined, 0, {}])(
+    "rejects unsupported category %j", (value) => {
+      expect(isPlaceType(value)).toBe(false);
+    },
+  );
 });
