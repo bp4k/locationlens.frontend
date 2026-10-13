@@ -16,6 +16,7 @@ import type { PlaceModel, PlaceTypeModel } from "../../types/place";
 import type { SearchCriteriaModel } from "../../types/search-criteria";
 import { PlaceListView } from "./place-list-view";
 import { PlaceDetailsView } from "./place-details-view";
+import { MapView } from "./map-view";
 import { placeTypeLabels } from "./place-type-labels";
 
 const useStyles = makeStyles({
@@ -164,7 +165,7 @@ export function SearchView({
   }
 
   async function selectPlace(placeId: string) {
-    // The future map can use this same selection handler as the result list.
+    // Both map markers and list items use this handler and the same selected ID.
     if (!search.places.some((place) => place.placeId === placeId)) return;
     const sequence = ++detailsSequence.current;
     setDetails({ status: "loading", placeId });
@@ -276,6 +277,12 @@ export function SearchView({
         </div>
       )}
       {search.status === "ready" && (
+        <>
+        <MapView
+          places={search.places}
+          selectedPlaceId={details.placeId}
+          onSelect={(placeId) => void selectPlace(placeId)}
+        />
         <div className={styles.results}>
           <PlaceListView
             places={search.places}
@@ -304,6 +311,7 @@ export function SearchView({
             )}
           </div>
         </div>
+        </>
       )}
     </main>
   );

@@ -140,12 +140,12 @@ selected ID so Retry details requests that place again. A new search/filter
 clears selection and unmounts any old review panel. Search/detail sequence
 counters ignore obsolete responses and failures, including after unmount; they
 do not cancel network requests. Both panels use the same selection state so a
-future MapView can share the list's selection handler.
+MapView shares the list's selection handler.
 
 Optional `reviewApiClient` and `onOpenClaim` props pass through to PlaceDetailsView.
 The home page supplies neither: reviews use the existing default client and the
-claim action stays hidden until a real claim form is connected. MapView is still
-separate work. No map or production fixture data is included.
+claim action stays hidden until a real claim form is connected. No production
+fixture data is included.
 
 The place HTTP contract remains proposed. Missing backend endpoints show errors
 and retry controls, not sample results. Tests cover form validation, coordinates,
@@ -153,3 +153,63 @@ filters, list/detail/review integration, retries, empty results, stale responses
 the route guard, and the default client's authenticated request/response mapping.
 
 Run `npm test`, `npm run typecheck`, and `npm run build` to verify.
+
+## MapView (Google Maps JavaScript API)
+
+`app/components/places/map-view.tsx` uses the same controlled props as the list:
+`places`, `selectedPlaceId`, and `onSelect(placeId)`. SearchView renders it above
+the list/details panels once a search finishes. Marker and list selections both
+load details through the existing client; selection remains owned by SearchView.
+
+The slides require an interactive map alongside text results. This implementation
+uses Google Maps as requested by the team. Google Places search stays in the
+backend; the browser map does not fetch an independent set of places.
+
+### Local setup
+
+Add to your untracked `.env`, then restart the Vite server:
+
+```dotenv
+VITE_GOOGLE_MAPS_API_KEY=your_browser_maps_key
+VITE_GOOGLE_MAPS_MAP_ID=your_map_id
+```
+
+Enable Maps JavaScript API on the team's Google Cloud project and configure a
+browser key restricted to the application's HTTP referrers and that API. This
+key is included in the browser build, so use a browser key rather than reusing a
+server Places credential. Google Maps requires billing on the project. Advanced
+markers require a map ID; Google's DEMO_MAP_ID is the fallback for development,
+but configure a real map ID for deployment.
+
+See [Google's advanced-marker setup](https://developers.google.com/maps/documentation/javascript/advanced-markers/start)
+and [API-key setup](https://developers.google.com/maps/documentation/javascript/get-api-key).
+
+### Rendering and lifecycle
+
+The official `@googlemaps/js-api-loader` imports maps, marker, and core libraries
+on demand. `app/lib/google-maps.ts` configures the page-wide loader once. MapView
+creates the map after loading completes and ignores late completion after
+unmount/retry. There is no Google script in the server-rendered HTML.
+
+New results replace markers and fit the viewport; a single result centers at
+zoom 14, and fitting multiple results caps zoom at 16. Center map on results
+restores that viewport after manual panning. Selection pans to the selected
+marker and changes its color, scale, stacking order, title, and aria-pressed
+state without recreating the map. Google's gmpClickable advanced markers support
+keyboard interaction. Place names are passed as text titles, not injected HTML.
+
+The latest onSelect callback is read through a ref so marker listeners remain
+current without rebuilding on every details update. Cleanup detaches marker
+listeners/maps, clears map listeners and generated DOM, and releases references.
+The shared SDK script remains loaded for the next search. An empty result set
+shows a message and disables centering rather than constructing empty bounds.
+
+Missing configuration and loader failures show an error and retry control. The
+list/details remain available when the map is unavailable. Google credential,
+billing, or quota diagnostics may also appear in the browser console.
+
+Tests inject simulated Google libraries and verify marker activation, map/list
+synchronization, highlighting, fitting, replacement, cleanup, failure/retry,
+and late loading. Loader tests verify key handling and library configuration.
+No tests call live Google services; live rendering requires the configured key
+and an available place-search backend.
