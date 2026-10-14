@@ -1,0 +1,19 @@
+runtime: python312
+service: frontend
+
+handlers:
+  - url: /assets
+    static_dir: assets
+    secure: always
+    expiration: 365d
+
+  - url: /favicon.ico
+    static_files: favicon.ico
+    upload: favicon.ico
+    secure: always
+
+  - url: /.*
+    static_files: index.html
+    upload: index.html
+    secure: always
+    expiration: 0s
