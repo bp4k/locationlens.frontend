@@ -168,9 +168,15 @@ export function SearchView({
 
   async function selectPlace(placeId: string) {
     // Both map markers and list items use this handler and the same selected ID.
-    if (!search.places.some((place) => place.placeId === placeId)) return;
+    const selectedPlace = search.places.find((place) => place.placeId === placeId);
+    if (!selectedPlace) return;
     const sequence = ++detailsSequence.current;
-    setDetails({ status: "loading", placeId });
+    // Search already supplies a validated PlaceModel. Detail enrichment must not
+    // block review/claim actions or discard a draft when the same place retries.
+    const fallback = details.placeId === placeId
+      ? details.place ?? selectedPlace
+      : selectedPlace;
+    setDetails({ status: "loading", placeId, place: fallback });
     try {
       const place = await apiClient.getPlaceDetails(placeId);
       if (alive.current && sequence === detailsSequence.current) {
@@ -180,6 +186,10 @@ export function SearchView({
       if (alive.current && sequence === detailsSequence.current) {
         setDetails({
           status: "error", placeId,
+          // An authorization failure or removed place invalidates the fallback.
+          place: error instanceof PlaceApiError && [401, 403, 404].includes(error.status)
+            ? undefined
+            : fallback,
           error: errorMessage(error, "Unable to load place details. Please try again."),
         });
       }
@@ -291,9 +301,10 @@ export function SearchView({
               onSelect={(placeId) => void selectPlace(placeId)}
             />
             <div className="ll-details-panel">
-              {details.status === "loading" ? (
+              {details.status === "loading" && (
                 <Spinner label="Loading place details…" />
-              ) : details.status === "error" ? (
+              )}
+              {details.status === "error" && (
                 <div role="alert">
                   <p className={styles.error}>{details.error}</p>
                   <Button
@@ -303,13 +314,12 @@ export function SearchView({
                     Retry details
                   </Button>
                 </div>
-              ) : (
-                <PlaceDetailsView
-                  place={details.place}
-                  apiClient={reviewApiClient}
-                  onOpenClaim={onOpenClaim}
-                />
               )}
+              <PlaceDetailsView
+                place={details.place}
+                apiClient={reviewApiClient}
+                onOpenClaim={onOpenClaim}
+              />
             </div>
           </div>
         )}
