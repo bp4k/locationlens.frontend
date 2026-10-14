@@ -1,5 +1,6 @@
 import { getAccessToken } from "../auth/token-storage";
 import { getApiBaseUrl } from "./env";
+import { withRequestTimeout } from "./request-timeout";
 
 export class ApiError extends Error {
   constructor(
@@ -15,6 +16,23 @@ export async function apiFetch<T>(
   path: string,
   init?: RequestInit,
 ): Promise<T> {
+  // Bound safe reads, including place searches/details. A cancelled write may
+  // still have committed on the server; keep existing mutation semantics.
+  const method = (init?.method ?? "GET").toUpperCase();
+  if (method === "GET" || method === "HEAD") {
+    return withRequestTimeout(
+      (signal) => fetchResponse<T>(path, { ...init, signal }),
+      new ApiError(
+        504,
+        "The request timed out after 10 seconds. Please try again.",
+      ),
+      init?.signal,
+    );
+  }
+  return fetchResponse<T>(path, init);
+}
+
+async function fetchResponse<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getAccessToken();
   const headers = new Headers(init?.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);

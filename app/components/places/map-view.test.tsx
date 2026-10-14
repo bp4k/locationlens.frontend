@@ -7,6 +7,7 @@ import type { PlaceModel } from "../../types/place";
 import { MapView } from "./map-view";
 import { SearchView } from "./search-view";
 import { loadGoogleMaps } from "../../lib/google-maps";
+import { withRequestTimeout } from "../../lib/request-timeout";
 
 vi.mock("../../lib/google-maps", () => ({ loadGoogleMaps: vi.fn() }));
 
@@ -53,6 +54,42 @@ function sdk() {
 }
 
 describe("MapView", () => {
+  it("stops a stalled map load, ignores late SDK completion, and retries", async () => {
+    vi.useFakeTimers();
+    try {
+      const api = sdk();
+      let resolve!: (libraries: GoogleMapsLibraries) => void;
+      const pending = new Promise<GoogleMapsLibraries>((done) => {
+        resolve = done;
+      });
+      const loader = vi
+        .fn()
+        .mockImplementationOnce(() =>
+          withRequestTimeout(
+            () => pending,
+            new Error("The map timed out after 10 seconds."),
+          ),
+        )
+        .mockResolvedValue(api.libraries);
+      render(<MapView places={[park]} onSelect={vi.fn()} loadMaps={loader} />);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10000);
+      });
+      expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+      expect(screen.queryByText(/Loading map/)).not.toBeInTheDocument();
+      await act(async () => resolve(api.libraries));
+      expect(api.Map).not.toHaveBeenCalled();
+      await act(async () => {
+        screen.getByRole("button", { name: "Retry map" }).click();
+      });
+      expect(
+        screen.getByRole("button", { name: park.name }),
+      ).toBeInTheDocument();
+      expect(api.Map).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
   it("synchronizes map and list selection through SearchView", async () => {
     const api = sdk();
     vi.mocked(loadGoogleMaps).mockResolvedValue(api.libraries);

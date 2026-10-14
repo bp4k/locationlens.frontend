@@ -1,7 +1,7 @@
 import { PlaceTypeModel } from "../../types/place";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { PlaceApiError } from "../../lib/place-api";
 import type { PlaceApiClient } from "../../lib/place-api";
 import type { PlaceModel } from "../../types/place";
@@ -38,6 +38,59 @@ async function searchAtlanta(user: ReturnType<typeof userEvent.setup>) {
 }
 
 describe("SearchView", () => {
+  afterEach(() => vi.useRealTimers());
+
+  it("stops timed-out search/detail loading and retries through the real place client", async () => {
+    vi.useFakeTimers();
+    vi.stubEnv("VITE_APP_API_URL", "http://localhost:8080/api");
+    const wirePlace = {
+      place_id: park.placeId,
+      name: park.name,
+      address: park.address,
+      latitude: park.latitude,
+      longitude: park.longitude,
+      types: park.types,
+    };
+    const fetch = vi
+      .fn<typeof globalThis.fetch>()
+      .mockReturnValueOnce(new Promise(() => {}))
+      .mockResolvedValueOnce(Response.json([wirePlace]))
+      .mockReturnValueOnce(new Promise(() => {}))
+      .mockResolvedValueOnce(Response.json(wirePlace));
+    vi.stubGlobal("fetch", fetch);
+    render(<SearchView />);
+    fireEvent.change(screen.getByLabelText("Location"), {
+      target: { value: "Atlanta" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Search" }));
+    expect(screen.getByText(/Searching places/)).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(screen.queryByText(/Searching places/)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+    expect(screen.queryByText(/No places found/)).not.toBeInTheDocument();
+    expect(fetch.mock.calls[0][1]?.signal?.aborted).toBe(true);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Retry search" }));
+    });
+    expect(screen.getByLabelText("Location")).toHaveValue("Atlanta");
+    fireEvent.click(screen.getByRole("button", { name: /Piedmont Park/ }));
+    expect(screen.getByText(/Loading place details/)).toBeInTheDocument();
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10000);
+    });
+    expect(screen.queryByText(/Loading place details/)).not.toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent("timed out");
+    expect(fetch.mock.calls[2][1]?.signal?.aborted).toBe(true);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Retry details" }));
+    });
+    expect(
+      screen.getByRole("heading", { name: park.name }),
+    ).toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(4);
+  });
   it("waits for valid input and supports coordinates including zero", async () => {
     const user = userEvent.setup();
     const api = client();
