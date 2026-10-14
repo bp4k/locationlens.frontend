@@ -4,7 +4,6 @@ import {
   MenuPopover,
   MenuList,
   MenuItem,
-  MenuDivider,
   Button,
 } from "@fluentui/react-components";
 import { PersonRegular } from "@fluentui/react-icons";
@@ -55,8 +54,7 @@ export function AccountMenu() {
           <MenuItem onClick={() => navigate("/admin/claims")}>
             Business claims (admin)
           </MenuItem>
-          <MenuDivider />
-          <MenuItem onClick={signOut}>Sign out</MenuItem>
+          {/* Sign out is temporarily unavailable in the UI; keep its handler above. */}
         </MenuList>
       </MenuPopover>
     </Menu>
