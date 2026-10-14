@@ -26,3 +26,11 @@ ordinary-user actions, invalid/missing tokens, and no saved claims on failed
 business verification. Place search/MapView and persistence across an application
 restart are outside this suite because master still has placeholder place APIs
 and these tests intentionally use in-memory H2.
+
+Review browser regression: reviews.spec.ts also requires the backend place-details
+fix (codex/place-details-reviews until merged). It verifies actual login/user
+provisioning, search-result selection with HTTP 200 details, review creation, fresh
+place/history reads, page reloads and duplicate rejection with draft preservation.
+The fixture uses locationlens_admin to match the current backend's login role
+synchronization. Live Keycloak/Google integration and server-restart persistence
+are not exercised. Set E2E_BACKEND_DIR explicitly when using locationlens-fresh.
