@@ -13,7 +13,10 @@ import type { PlaceApiClient } from "../../lib/place-api";
 import type { ReviewApiClient } from "../../lib/review-api";
 import { isLatitude, isLongitude, PLACE_TYPES } from "../../types/place";
 import type { PlaceModel, PlaceTypeModel } from "../../types/place";
-import type { SearchCriteriaModel } from "../../types/search-criteria";
+import {
+  SearchCriteriaModel,
+  type SearchCriteriaInput,
+} from "../../types/search-criteria";
 import { PlaceListView } from "./place-list-view";
 import { PlaceDetailsView } from "./place-details-view";
 import { MapView } from "./map-view";
@@ -21,20 +24,13 @@ import { placeTypeLabels } from "./place-type-labels";
 
 const useStyles = makeStyles({
   container: {
-    maxWidth: "70rem",
-    margin: "0 auto",
-    padding: tokens.spacingVerticalXXL,
     color: tokens.colorNeutralForeground1,
-    display: "grid",
-    rowGap: tokens.spacingVerticalL,
   },
   fields: { display: "grid", rowGap: tokens.spacingVerticalS },
   actions: { display: "flex", flexWrap: "wrap", gap: tokens.spacingHorizontalS },
   results: {
     display: "grid",
-    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-    gap: tokens.spacingHorizontalXL,
-    "@media (max-width: 700px)": { gridTemplateColumns: "minmax(0, 1fr)" },
+    rowGap: tokens.spacingVerticalL,
   },
   error: { color: tokens.colorPaletteRedForeground1 },
 });
@@ -103,7 +99,13 @@ export function SearchView({
     };
   }, []);
 
-  async function runSearch(criteria: SearchCriteriaModel) {
+  async function runSearch(input: SearchCriteriaInput) {
+    const criteria = new SearchCriteriaModel(input);
+    const validationError = criteria.getValidationError();
+    if (validationError) {
+      setFormError(validationError);
+      return;
+    }
     const sequence = ++searchSequence.current;
     submittedCriteria.current = criteria;
     setFormError(undefined);
@@ -133,7 +135,7 @@ export function SearchView({
       setFormError("Enter a positive whole-number search radius in meters.");
       return;
     }
-    const criteria: SearchCriteriaModel = { radiusMeters, placeType };
+    const criteria: SearchCriteriaInput = { radiusMeters, placeType };
     // Send only the chosen location mode, avoiding text/coordinate precedence
     // assumptions in the proposed backend contract. Zero coordinates are valid.
     if (mode === "text") {
@@ -166,9 +168,15 @@ export function SearchView({
 
   async function selectPlace(placeId: string) {
     // Both map markers and list items use this handler and the same selected ID.
-    if (!search.places.some((place) => place.placeId === placeId)) return;
+    const selectedPlace = search.places.find((place) => place.placeId === placeId);
+    if (!selectedPlace) return;
     const sequence = ++detailsSequence.current;
-    setDetails({ status: "loading", placeId });
+    // Search already supplies a validated PlaceModel. Detail enrichment must not
+    // block review/claim actions or discard a draft when the same place retries.
+    const fallback = details.placeId === placeId
+      ? details.place ?? selectedPlace
+      : selectedPlace;
+    setDetails({ status: "loading", placeId, place: fallback });
     try {
       const place = await apiClient.getPlaceDetails(placeId);
       if (alive.current && sequence === detailsSequence.current) {
@@ -178,6 +186,10 @@ export function SearchView({
       if (alive.current && sequence === detailsSequence.current) {
         setDetails({
           status: "error", placeId,
+          // An authorization failure or removed place invalidates the fallback.
+          place: error instanceof PlaceApiError && [401, 403, 404].includes(error.status)
+            ? undefined
+            : fallback,
           error: errorMessage(error, "Unable to load place details. Please try again."),
         });
       }
@@ -185,134 +197,142 @@ export function SearchView({
   }
 
   return (
-    <main className={styles.container}>
-      <h1>Find places</h1>
-      <form className={styles.fields} onSubmit={submitSearch} noValidate>
-        <label htmlFor={`${id}-mode`}>Search by</label>
-        <Select
-          id={`${id}-mode`}
-          value={mode}
-          onChange={(event) => setMode(event.target.value as "text" | "coordinates")}
-        >
-          <option value="text">Location text</option>
-          <option value="coordinates">Coordinates</option>
-        </Select>
-        {mode === "text" ? (
-          <>
-            <label htmlFor={`${id}-location`}>Location</label>
-            <Input
-              id={`${id}-location`}
-              value={locationText}
-              placeholder="City, address, or location"
-              onChange={(event) => setLocationText(event.target.value)}
-            />
-          </>
-        ) : (
-          <>
-            <label htmlFor={`${id}-latitude`}>Latitude</label>
-            <Input
-              id={`${id}-latitude`}
-              type="number"
-              step="any"
-              value={latitude}
-              onChange={(event) => setLatitude(event.target.value)}
-            />
-            <label htmlFor={`${id}-longitude`}>Longitude</label>
-            <Input
-              id={`${id}-longitude`}
-              type="number"
-              step="any"
-              value={longitude}
-              onChange={(event) => setLongitude(event.target.value)}
-            />
-          </>
-        )}
-        <label htmlFor={`${id}-radius`}>Search radius (meters)</label>
-        <Input
-          id={`${id}-radius`}
-          type="number"
-          min={1}
-          step={1}
-          value={radius}
-          onChange={(event) => setRadius(event.target.value)}
-        />
-        <label htmlFor={`${id}-type`}>Place type</label>
-        <Select
-          id={`${id}-type`}
-          value={placeType ?? ""}
-          onChange={(event) =>
-            applyFilter((event.target.value || undefined) as PlaceTypeModel | undefined)
-          }
-        >
-          <option value="">All types</option>
-          {PLACE_TYPES.map((type) => (
-            <option key={type} value={type}>{placeTypeLabels[type]}</option>
-          ))}
-        </Select>
-        <div className={styles.actions}>
-          <Button appearance="primary" type="submit">Search</Button>
-          <Button
-            type="button"
-            disabled={!placeType}
-            onClick={() => applyFilter(undefined)}
+    <main className={`${styles.container} ll-workspace`}>
+      {/* This sidebar only rearranges existing controls and content. Keeping their
+          handlers intact preserves search/filter/retry and selection semantics. */}
+      <aside className="ll-sidebar" aria-label="Search and places">
+        <div className="ll-eyebrow">EXPLORE YOUR SURROUNDINGS</div>
+        <h1>Find places</h1>
+        <p className="ll-intro">A new favorite could be just around the corner.</p>
+        <form className={`${styles.fields} ll-search-form`} onSubmit={submitSearch} noValidate>
+          <label htmlFor={`${id}-mode`}>Search by</label>
+          <Select
+            id={`${id}-mode`}
+            value={mode}
+            onChange={(event) => setMode(event.target.value as "text" | "coordinates")}
           >
-            Clear filter
-          </Button>
-        </div>
-        {formError && (
-          <p className={styles.error} role="alert">{formError}</p>
-        )}
-      </form>
-      {search.status === "idle" && <p>Enter a location to find nearby places.</p>}
-      {search.status === "loading" && <Spinner label="Searching places…" />}
-      {search.status === "error" && (
-        <div role="alert">
-          <p className={styles.error}>{search.error}</p>
-          <Button
-            type="button"
-            onClick={() => submittedCriteria.current && void runSearch(submittedCriteria.current)}
-          >
-            Retry search
-          </Button>
-        </div>
-      )}
-      {search.status === "ready" && (
-        <>
-        <MapView
-          places={search.places}
-          selectedPlaceId={details.placeId}
-          onSelect={(placeId) => void selectPlace(placeId)}
-        />
-        <div className={styles.results}>
-          <PlaceListView
-            places={search.places}
-            selectedPlaceId={details.placeId}
-            onSelect={(placeId) => void selectPlace(placeId)}
+            <option value="text">Location text</option>
+            <option value="coordinates">Coordinates</option>
+          </Select>
+          {mode === "text" ? (
+            <>
+              <label htmlFor={`${id}-location`}>Location</label>
+              <Input
+                id={`${id}-location`}
+                value={locationText}
+                maxLength={500}
+                placeholder="City, address, or location"
+                onChange={(event) => setLocationText(event.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <label htmlFor={`${id}-latitude`}>Latitude</label>
+              <Input
+                id={`${id}-latitude`}
+                type="number"
+                step="any"
+                value={latitude}
+                onChange={(event) => setLatitude(event.target.value)}
+              />
+              <label htmlFor={`${id}-longitude`}>Longitude</label>
+              <Input
+                id={`${id}-longitude`}
+                type="number"
+                step="any"
+                value={longitude}
+                onChange={(event) => setLongitude(event.target.value)}
+              />
+            </>
+          )}
+          <label htmlFor={`${id}-radius`}>Search radius (meters)</label>
+          <Input
+            id={`${id}-radius`}
+            type="number"
+            min={1}
+            max={50000}
+            step={1}
+            value={radius}
+            onChange={(event) => setRadius(event.target.value)}
           />
-          <div>
-            {details.status === "loading" ? (
-              <Spinner label="Loading place details…" />
-            ) : details.status === "error" ? (
-              <div role="alert">
-                <p className={styles.error}>{details.error}</p>
-                <Button
-                  type="button"
-                  onClick={() => details.placeId && void selectPlace(details.placeId)}
-                >
-                  Retry details
-                </Button>
-              </div>
-            ) : (
+          <label htmlFor={`${id}-type`}>Place type</label>
+          <Select
+            id={`${id}-type`}
+            value={placeType ?? ""}
+            onChange={(event) =>
+              applyFilter((event.target.value || undefined) as PlaceTypeModel | undefined)
+            }
+          >
+            <option value="">All types</option>
+            {PLACE_TYPES.map((type) => (
+              <option key={type} value={type}>{placeTypeLabels[type]}</option>
+            ))}
+          </Select>
+          <div className={styles.actions}>
+            <Button appearance="primary" type="submit">Search</Button>
+            <Button
+              type="button"
+              disabled={!placeType}
+              onClick={() => applyFilter(undefined)}
+            >
+              Clear filter
+            </Button>
+          </div>
+          {formError && (
+            <p className={styles.error} role="alert">{formError}</p>
+          )}
+        </form>
+        {search.status === "idle" && <p>Enter a location to find nearby places.</p>}
+        {search.status === "loading" && <Spinner label="Searching places…" />}
+        {search.status === "error" && (
+          <div role="alert">
+            <p className={styles.error}>{search.error}</p>
+            <Button
+              type="button"
+              onClick={() => submittedCriteria.current && void runSearch(submittedCriteria.current)}
+            >
+              Retry search
+            </Button>
+          </div>
+        )}
+        {search.status === "ready" && (
+          <div className={styles.results}>
+            <PlaceListView
+              places={search.places}
+              selectedPlaceId={details.placeId}
+              onSelect={(placeId) => void selectPlace(placeId)}
+            />
+            <div className="ll-details-panel">
+              {details.status === "loading" && (
+                <Spinner label="Loading place details…" />
+              )}
+              {details.status === "error" && (
+                <div role="alert">
+                  <p className={styles.error}>{details.error}</p>
+                  <Button
+                    type="button"
+                    onClick={() => details.placeId && void selectPlace(details.placeId)}
+                  >
+                    Retry details
+                  </Button>
+                </div>
+              )}
               <PlaceDetailsView
                 place={details.place}
                 apiClient={reviewApiClient}
                 onOpenClaim={onOpenClaim}
               />
-            )}
+            </div>
           </div>
-        </div>
-        </>
-      )}
+        )}
+      </aside>
+      <div className="ll-map-stage">
+        <MapView
+          places={search.places}
+          selectedPlaceId={details.placeId}
+          onSelect={(placeId) => void selectPlace(placeId)}
+        />
+      </div>
     </main>
   );
 }

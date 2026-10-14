@@ -163,7 +163,7 @@ export function AdminClaimView({
   }
 
   return (
-    <main className={styles.container} aria-labelledby={headingId}>
+    <main className={`${styles.container} ll-admin-panel`} aria-labelledby={headingId}>
       <h1 id={headingId}>Pending business claims</h1>
       <p>Review requests to verify ownership of business locations.</p>
       <Button
@@ -199,7 +199,7 @@ export function AdminClaimView({
                 aria-label={`Claim for ${claim.placeId}`}
               >
                 <h2>Place: {claim.placeId}</h2>
-                <p>Submitted by: {claim.userId}</p>
+                <p>Submitted by: {claim.claimantUserId}</p>
                 <p>Claim reference: {claim.claimId}</p>
                 {decision?.claimId === claim.claimId ? (
                   <>

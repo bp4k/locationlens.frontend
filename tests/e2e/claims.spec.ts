@@ -22,6 +22,27 @@ async function token(page: Page) {
   return page.evaluate(() => localStorage.getItem("locationlens.access_token"));
 }
 
+test("an expired browser token renews from the OIDC session and submits the selected claim", async ({ page }) => {
+  await login(page);
+  const placeId = `business-${randomUUID()}`;
+  await page.goto(`/places/${placeId}/claim`);
+  const expired = await page.request.get("http://127.0.0.1:9084/test/expired-token");
+  const expiredToken = (await expired.json()).token;
+  await page.evaluate((value) => {
+    localStorage.setItem("locationlens.access_token", value);
+    // Match the original stale signed-in UI while the server rejects the JWT.
+    localStorage.setItem("locationlens.expires_at", String(Date.now() + 300_000));
+  }, expiredToken);
+  const renewed = page.waitForResponse((response) => response.url().endsWith("/api/v1/session/refresh"));
+  const created = page.waitForResponse((response) => response.url().endsWith("/api/v1/business-claims") && response.status() === 201);
+  await page.getByRole("button", { name: "Submit business claim" }).click();
+  expect((await renewed).status()).toBe(200);
+  expect((await created).status()).toBe(201);
+  await expect(page.getByRole("status")).toContainText("pending administrator review");
+  expect(await token(page)).not.toBe(expiredToken);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
 for (const action of ["approve", "reject"] as const) {
   test(`signed-in user submits a verified business and administrator ${action}s it`, async ({
     page,

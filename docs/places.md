@@ -84,7 +84,7 @@ The API base already includes `/api`. Search uses URL-encoded query parameters:
 
 - `location_text`: optional trimmed location text.
 - `latitude` and `longitude`: optional complete coordinate pair in decimal degrees.
-- `radius_meters`: required positive safe integer in meters.
+- `radius_meters`: required positive integer in meters, at most 2,147,483,647 (Java Integer).
 - `place_type`: optional PlaceTypeModel enum name; omit for all types.
 
 Supply nonblank location text or a valid coordinate pair. If coordinates are
@@ -213,3 +213,16 @@ synchronization, highlighting, fitting, replacement, cleanup, failure/retry,
 and late loading. Loader tests verify key handling and library configuration.
 No tests call live Google services; live rendering requires the configured key
 and an available place-search backend.
+
+## Review actions when detail enrichment fails
+
+Search results already contain a validated PlaceModel. Selecting a result now
+displays that data and its review/claim actions immediately while the detail
+request runs. Successful detail responses refresh it; temporary failures keep
+the result visible alongside the error and Retry details button. Retrying the
+same selection preserves an open review draft. HTTP 401, 403 and 404 discard
+the fallback, since authorization or place existence is no longer established.
+
+The currently inspected backend getPlaceDetails endpoint still returns an empty
+HTTP 400 placeholder. This frontend fix removes that placeholder as a blocker
+for writing reviews, but does not implement the unfinished backend detail lookup.

@@ -9,9 +9,11 @@ import type { BusinessClaimModel } from "../../types/business-claim";
 
 const first: BusinessClaimModel = {
   claimId: "6a7d1f76-ef09-49ee-a310-25850196740a",
-  userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
+  claimantUserId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   placeId: "place-1",
   status: "PENDING",
+  submittedAt: null,
+  reviewedAt: null,
 };
 const second = {
   ...first,
@@ -52,7 +54,7 @@ describe("AdminClaimView", () => {
     const row = await screen.findByRole("article", {
       name: "Claim for place-1",
     });
-    expect(row).toHaveTextContent(first.userId);
+    expect(row).toHaveTextContent(first.claimantUserId);
     expect(row).toHaveTextContent(first.claimId);
   });
 

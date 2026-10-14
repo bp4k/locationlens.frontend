@@ -21,6 +21,23 @@ function setup() {
 }
 
 describe("claim views with the real API client", () => {
+  it("renews a rejected token and confirms the selected claim without asking an already signed-in user to log in", async () => {
+    const fetch = setup()
+      .mockResolvedValueOnce(new Response(null, { status: 401 }))
+      .mockResolvedValueOnce(Response.json({ access_token: "renewed-token", token_type: "Bearer", expires_in: 300 }))
+      .mockResolvedValueOnce(Response.json(response, { status: 201 }));
+    const user = userEvent.setup();
+    render(<PlaceDetailsView place={{ placeId: response.placeId, name: "Campus Cafe", address: "Atlanta",
+      latitude: 33, longitude: -84, types: [PlaceTypeModel.RESTAURANT] }} />);
+    await user.click(screen.getByRole("button", { name: "Claim this business" }));
+    await user.click(screen.getByRole("button", { name: "Submit business claim" }));
+    expect(await screen.findByRole("status")).toHaveTextContent("was submitted");
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(fetch).toHaveBeenCalledTimes(3);
+    expect(fetch.mock.calls[1][0]).toBe("http://localhost:8080/api/v1/session/refresh");
+    expect(JSON.parse(fetch.mock.calls[2][1]?.body as string)).toEqual({ placeId: response.placeId });
+    expect(new Headers(fetch.mock.calls[2][1]?.headers).get("Authorization")).toBe("Bearer renewed-token");
+  });
   it("submits from place details and preserves confirmation when the panel is hidden", async () => {
     const fetch = setup().mockResolvedValue(
       Response.json(response, { status: 201 }),

@@ -8,9 +8,11 @@ import type { BusinessClaimModel } from "../../types/business-claim";
 
 const saved: BusinessClaimModel = {
   claimId: "6a7d1f76-ef09-49ee-a310-25850196740a",
-  userId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
+  claimantUserId: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   placeId: "place-1",
   status: "PENDING",
+  submittedAt: null,
+  reviewedAt: null,
 };
 function client(): ClaimApiClient {
   return {
