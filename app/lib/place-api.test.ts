@@ -107,6 +107,8 @@ describe("PlaceApiClient input validation", () => {
     { ...criteria, radiusMeters: 1.5 },
     { ...criteria, radiusMeters: Infinity },
     { ...criteria, radiusMeters: 2_147_483_648 },
+    { ...criteria, radiusMeters: 50_001 },
+    { ...criteria, latitude: 0, longitude: 0 },
     { ...criteria, placeType: "UNKNOWN" },
   ])("rejects invalid criteria %j before HTTP", async (input) => {
     const fetch = setup([]);

@@ -30,7 +30,7 @@ const child = spawn(java, ["-jar", jar], {
     IDP_URI: "http://127.0.0.1:9084",
     IDP_CLIENT_ID: "e2e-client",
     IDP_CLIENT_SECRET: "fixture-secret",
-    VALID_REDIRECTS: "http://127.0.0.1:5173/login-redirect",
+    VALID_REDIRECTS: `http://127.0.0.1:${process.env.E2E_FRONTEND_PORT || 5173}/login-redirect`,
     GOOGLE_PLACES_API_KEY: "fixture-key",
     GOOGLE_PLACES_BASE_URL: "http://127.0.0.1:9084/v1",
     DB_URL: "jdbc:h2:mem:claim-e2e",

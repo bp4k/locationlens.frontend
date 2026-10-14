@@ -14,6 +14,11 @@ const jwk = {
   use: "sig",
 };
 const codes = new Map();
+const fixturePark = {
+  id: "dummy-1", displayName: { text: "Piedmont Park" },
+  formattedAddress: "400 Park Dr NE, Atlanta, GA", location: { latitude: 33.785, longitude: -84.3738 },
+  types: ["park", "tourist_attraction"],
+};
 const people = {
   user: "a852a1c9-1384-4571-8c53-7eeeb4975329",
   admin: "b952a1c9-1384-4571-8c53-7eeeb4975329",
@@ -86,6 +91,16 @@ createServer(async (req, res) => {
   if (req.method === "POST") {
     let body = "";
     for await (const chunk of req) body += chunk;
+    if (url.pathname === "/v1/places:searchText" || url.pathname === "/v1/places:searchNearby") {
+      if (req.headers["x-goog-api-key"] !== "fixture-key") return json(res, 403, { error: "invalid_provider_key" });
+      const search = JSON.parse(body);
+      if (url.pathname.endsWith(":searchText")) {
+        if (!search.textQuery) return json(res, 400, { error: "missing_location" });
+        return json(res, 200, { places: [{ location: fixturePark.location }] });
+      }
+      if (!search.locationRestriction?.circle?.radius) return json(res, 400, { error: "missing_radius" });
+      return json(res, 200, { places: [fixturePark] });
+    }
     const params = new URLSearchParams(body);
     if (url.pathname === "/authorize") {
       const role = params.get("role");
@@ -137,10 +152,11 @@ createServer(async (req, res) => {
   if (url.pathname.startsWith("/v1/places/")) {
     if (
       req.headers["x-goog-api-key"] !== "fixture-key" ||
-      req.headers["x-goog-fieldmask"] !== "id,businessStatus"
+      !["id,businessStatus", "id,displayName,formattedAddress,location,types"].includes(req.headers["x-goog-fieldmask"])
     )
       return json(res, 400, { error: "invalid_provider_request" });
     const id = decodeURIComponent(url.pathname.slice("/v1/places/".length));
+    if (id === fixturePark.id && req.headers["x-goog-fieldmask"] !== "id,businessStatus") return json(res, 200, fixturePark);
     if (id.startsWith("business-"))
       return json(res, 200, { id, businessStatus: "OPERATIONAL" });
     if (id === "non-business") return json(res, 200, { id });

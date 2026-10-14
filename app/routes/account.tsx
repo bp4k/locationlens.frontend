@@ -35,19 +35,26 @@ export default function Account() {
   const styles = useStyles();
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    setError(null);
+    setUser(null);
     getCurrentUser()
-      .then(setUser)
-      .catch(() => setError("Could not load your account details."));
-  }, []);
+      .then((profile) => { if (active) setUser(profile); })
+      .catch(() => { if (active) setError("Could not load your account details. Please try again."); });
+    return () => { active = false; };
+  }, [attempt]);
 
   const idpAcctConsoleUrl = getIdpAcctConsoleUrl();
 
   if (error) {
     return (
-      <div className={styles.container}>
-        <Text>{error}</Text>
+      <div className={`${styles.container} ll-account-panel`}>
+        <h1>Your account</h1>
+        <Text role="alert">{error}</Text>
+        <Button onClick={() => setAttempt((value) => value + 1)}>Retry account</Button>
       </div>
     );
   }

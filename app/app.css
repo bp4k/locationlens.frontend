@@ -60,20 +60,15 @@ header.ll-header { position: relative; z-index: 10; height: 72px; box-sizing: bo
 .ll-map-stage .ll-map { height: 100%; min-height: 400px; position: relative; }
 .ll-map-stage .ll-map > [role="region"] { position: absolute; inset: 0; height: 100%; border-radius: 0; }
 .ll-map-stage .ll-map > h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-.ll-map-stage .ll-map > button { position: absolute; z-index: 3; top: 22px; right: 22px; border: 0; padding: 12px 18px; box-shadow: var(--ll-shadow); border-radius: 14px; background: white; }
+.ll-map-stage .ll-map > button { position: absolute; z-index: 3; top: 22px; left: 22px; border: 0; padding: 12px 18px; box-shadow: var(--ll-shadow); border-radius: 14px; background: white; }
 .ll-map-stage .ll-map > p { position: absolute; z-index: 3; bottom: 44px; left: 24px; right: 100px; width: fit-content; padding: 10px 14px; border-radius: 12px; background: rgb(255 255 255 / 95%); box-shadow: var(--ll-shadow); font-size: 12px; }
 .ll-map-stage .ll-map > [role="alert"], .ll-map-stage .ll-map > .fui-Spinner { position: absolute; z-index: 3; top: 85px; left: 24px; right: 24px; max-width: 440px; padding: 20px; border-radius: 18px; background: white; box-shadow: var(--ll-shadow); }
 
-/* Abstract illustration, not real tiles/streets/results. CSS avoids fetching map
-   services or images before a successful search and on the public welcome page. */
-.ll-explore-placeholder { height: 100%; position: relative; overflow: hidden; display: grid; align-items: end; }
+/* Decorative artwork used only on the public welcome page. */
 .ll-map-art { position: absolute; inset: 0; overflow: hidden; background: repeating-linear-gradient(25deg, transparent 0 88px, #fff9 89px 103px, transparent 104px 190px), repeating-linear-gradient(115deg, #dfebe5 0 120px, #fff 121px 134px, #e9ede4 135px 240px); }
 .ll-map-art::before { content: ""; position: absolute; width: 36%; height: 130%; top: -20%; right: 12%; background: #bad8e8; border-radius: 50%; transform: rotate(28deg); border: 12px solid #d1e4ec; }
 .ll-map-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(0deg, #edf2ed 5%, transparent 80%); }
 .ll-map-art > span { position: absolute; top: 30%; left: 38%; z-index: 1; border: 10px solid #ffffff80; background: var(--ll-blue); background-clip: padding-box; color: white; border-radius: 50%; width: 78px; height: 78px; display: grid; place-items: center; font-size: 44px; box-shadow: var(--ll-shadow); }
-.ll-placeholder-copy { position: relative; z-index: 1; padding: clamp(30px, 7vw, 90px); }
-.ll-placeholder-copy h2 { font-size: clamp(32px, 4vw, 60px); line-height: 1.1; margin: 18px 0; letter-spacing: -.05em; }
-.ll-placeholder-copy p { color: #526b64; font-size: 14px; }
 
 /* Supporting pages reuse card surfaces while retaining semantic fields/actions. */
 body .ll-review-panel, body .ll-admin-panel, body .ll-account-panel, body .ll-standalone-panel { background: var(--ll-surface); border: 1px solid var(--ll-line); border-radius: 24px; box-shadow: var(--ll-shadow); margin: 32px auto; width: calc(100% - 32px); box-sizing: border-box; }
@@ -113,9 +108,6 @@ body .ll-review-panel, body .ll-admin-panel, body .ll-account-panel, body .ll-st
   .ll-workspace { height: auto; min-height: calc(100dvh - 72px); grid-template-columns: minmax(0, 1fr); }
   .ll-map-stage { grid-row: 1; height: 44dvh; min-height: 310px; }
   .ll-sidebar { grid-row: 2; overflow: visible; border-right: 0; border-radius: 24px 24px 0 0; margin-top: -16px; z-index: 4; position: relative; padding: 26px 20px; }
-  .ll-placeholder-copy { padding: 28px; }
-  .ll-placeholder-copy h2 { font-size: 32px; }
-  .ll-placeholder-copy > .ll-eyebrow { display: none; }
   .ll-map-stage .ll-map > p { bottom: 44px; left: 12px; right: 12px; }
   .ll-map-stage .ll-map { min-height: 310px; }
   .ll-welcome-layout { grid-template-columns: 1fr; gap: 32px; padding: 20px 24px 48px; }

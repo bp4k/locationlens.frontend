@@ -72,8 +72,8 @@ export function MapView({ places, selectedPlaceId, onSelect, loadMaps = loadGoog
       // completion must never attach another map to the same DOM container.
       if (disposed || !element) return;
       const map = new libraries.maps.Map(element, {
-        center: { lat: 0, lng: 0 },
-        zoom: 2,
+        center: { lat: 33.749, lng: -84.388 },
+        zoom: 12,
         mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID?.trim() || "DEMO_MAP_ID",
         gestureHandling: "cooperative",
         streetViewControl: false,
@@ -160,7 +160,9 @@ export function MapView({ places, selectedPlaceId, onSelect, loadMaps = loadGoog
   return (
     <section className={`${styles.container} ll-map`} aria-labelledby={`${id}-heading`}>
       <h2 id={`${id}-heading`}>Map</h2>
-      <p>Select a marker or a place in the list to see its details.</p>
+      <p>{places.length === 0
+        ? "Search a city, address, or coordinates to find nearby places."
+        : "Select a marker or a place in the list to see its details."}</p>
       <Button type="button" disabled={status !== "ready" || places.length === 0} onClick={centerMap}>
         Center map on results
       </Button>
@@ -171,7 +173,6 @@ export function MapView({ places, selectedPlaceId, onSelect, loadMaps = loadGoog
           <Button type="button" onClick={() => setAttempt((value) => value + 1)}>Retry map</Button>
         </div>
       )}
-      {places.length === 0 && <p>No places to display on the map.</p>}
       <div ref={canvas} className={styles.canvas} role="region" aria-label="Place results map" />
     </section>
   );

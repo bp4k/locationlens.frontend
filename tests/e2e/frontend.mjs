@@ -45,4 +45,4 @@ createServer(async (req, res) => {
     res.writeHead(500);
     res.end("Test frontend unavailable");
   }
-}).listen(5173, "127.0.0.1");
+}).listen(Number(process.env.E2E_FRONTEND_PORT || 5173), "127.0.0.1");
