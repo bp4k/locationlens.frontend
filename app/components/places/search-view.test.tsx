@@ -40,6 +40,23 @@ async function searchAtlanta(user: ReturnType<typeof userEvent.setup>) {
 describe("SearchView", () => {
   afterEach(() => vi.useRealTimers());
 
+  it("keeps the same map mounted before, during, and after a failed or successful search", async () => {
+    const user = userEvent.setup();
+    const api = client();
+    const pending = deferred<PlaceModel[]>();
+    vi.mocked(api.search).mockReturnValueOnce(pending.promise)
+      .mockRejectedValueOnce(new Error("Search unavailable"));
+    render(<SearchView apiClient={api} />);
+    const map = screen.getByRole("region", { name: "Map test boundary" });
+    await searchAtlanta(user);
+    expect(screen.getByRole("region", { name: "Map test boundary" })).toBe(map);
+    await act(async () => pending.resolve([park]));
+    expect(screen.getByRole("region", { name: "Map test boundary" })).toBe(map);
+    await user.click(screen.getByRole("button", { name: "Search" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Unable to search places");
+    expect(screen.getByRole("region", { name: "Map test boundary" })).toBe(map);
+  });
+
   it("stops timed-out search/detail loading and retries through the real place client", async () => {
     vi.useFakeTimers();
     vi.stubEnv("VITE_APP_API_URL", "http://localhost:8080/api");

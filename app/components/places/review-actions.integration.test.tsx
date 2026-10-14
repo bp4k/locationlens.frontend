@@ -24,6 +24,7 @@ function setup(detailStatus = 400) {
     .fn<typeof globalThis.fetch>()
     .mockImplementation(async (url, init) => {
       const path = new URL(String(url)).pathname;
+      if (path === "/api/v1/session/refresh") return new Response(null, { status: 401 });
       if (path === "/api/v1/places/search") return Response.json([place]);
       if (path === "/api/v1/places/dummy-1")
         return new Response("", { status: detailStatus });

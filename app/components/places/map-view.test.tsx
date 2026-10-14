@@ -160,7 +160,10 @@ describe("MapView", () => {
     const api = sdk();
     render(<MapView places={[]} onSelect={vi.fn()} loadMaps={api.loadMaps} />);
     await waitFor(() => expect(api.Map).toHaveBeenCalled());
-    expect(screen.getByText("No places to display on the map.")).toBeInTheDocument();
+    expect(screen.getByText("Search a city, address, or coordinates to find nearby places.")).toBeInTheDocument();
+    expect(api.Map).toHaveBeenCalledWith(expect.any(HTMLElement), expect.objectContaining({
+      center: { lat: 33.749, lng: -84.388 }, zoom: 12,
+    }));
     expect(screen.getByRole("button", { name: "Center map on results" })).toBeDisabled();
     expect(api.map.fitBounds).not.toHaveBeenCalled();
   });

@@ -92,9 +92,13 @@ it("redirects to Keycloak's end-session endpoint when an IDP realm is configured
   render(
     <FluentProvider theme={webLightTheme}>
       <AuthProvider>
-        <MemoryRouter>
-          <AccountMenu />
-        </MemoryRouter>
+        <RouterProvider router={createMemoryRouter([
+          { path: "/welcome", element: <><SessionControls /><h1>Welcome page</h1></> },
+          { path: "/login", element: <h1>Login route</h1> },
+          { element: <ProtectedLayout />, children: [
+            { path: "/account", element: <h1>Private account page</h1> },
+          ] },
+        ], { initialEntries: ["/account"] })} />
       </AuthProvider>
     </FluentProvider>,
   );
@@ -102,6 +106,9 @@ it("redirects to Keycloak's end-session endpoint when an IDP realm is configured
   await user.click(await screen.findByRole("menuitem", { name: "Sign out" }));
 
   expect(getAccessToken()).toBeNull();
+  expect(screen.getByRole("heading", { name: "Welcome page" })).toBeInTheDocument();
+  expect(screen.getByText("Signed out")).toBeInTheDocument();
+  expect(screen.queryByRole("heading", { name: "Login route" })).not.toBeInTheDocument();
   expect(locationStub.href).toBe(
     "http://localhost:8084/realms/locationlens/protocol/openid-connect/logout" +
       "?client_id=locationlens" +

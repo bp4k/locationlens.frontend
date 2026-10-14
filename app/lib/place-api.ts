@@ -16,7 +16,6 @@ export interface PlaceApiClient {
   getPlaceDetails(placeId: string): Promise<PlaceModel>;
 }
 
-// Proposed routes pending PlaceController implementation; see docs/places.md.
 // The existing API base already includes /api and apiFetch supplies bearer auth.
 export const placeApiClient: PlaceApiClient = {
   search: async (criteria) => {

@@ -21,14 +21,15 @@ describe("SearchCriteriaModel value object", () => {
       longitude: -84.396,
       placeType: PlaceTypeModel.PARK,
     });
-    expect(criteria.isValid()).toBe(true);
+    // Both location modes are retained as input, but rejected as ambiguous.
+    expect(criteria.isValid()).toBe(false);
     expect(Object.keys(criteria)).not.toContain("isValid");
   });
   it.each([
     text,
     { ...text, locationText: "  Atlanta  " },
     { latitude: 0, longitude: 0, radiusMeters: 1 },
-    { latitude: -90, longitude: 180, radiusMeters: 2_147_483_647 },
+    { latitude: -90, longitude: 180, radiusMeters: 50_000 },
     { latitude: 90, longitude: -180, radiusMeters: 500 },
     { latitude: 33.123456789, longitude: -84.987654321, radiusMeters: 1000 },
     { locationText: "", latitude: 0, longitude: 0, radiusMeters: 1000 },
@@ -59,6 +60,9 @@ describe("SearchCriteriaModel value object", () => {
     { ...text, radiusMeters: Infinity },
     { ...text, radiusMeters: "1000" },
     { ...text, radiusMeters: 2_147_483_648 },
+    { ...text, radiusMeters: 50_001 },
+    { ...text, latitude: 0, longitude: 0 },
+    { ...text, locationText: "a".repeat(501) },
     { ...text, placeType: "UNKNOWN" },
     { ...text, placeType: null },
   ])("returns false for invalid values %j without throwing", (input) => {

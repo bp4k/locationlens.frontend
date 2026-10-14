@@ -55,13 +55,19 @@ export class SearchCriteriaModel implements SearchCriteriaInput {
     if (!this.locationText?.trim() && !hasCoordinates) {
       return "Enter a location or provide coordinates before searching.";
     }
-    // Backend CriteriaRequest represents radiusMeters as a Java Integer.
+    if (this.locationText?.trim() && hasCoordinates) {
+      return "Enter either a location or coordinates, not both.";
+    }
+    if (this.locationText && this.locationText.length > 500) {
+      return "Enter a location of at most 500 characters.";
+    }
+    // Google Nearby Search accepts a radius of at most 50 km.
     if (
       !Number.isInteger(this.radiusMeters) ||
       this.radiusMeters <= 0 ||
-      this.radiusMeters > 2_147_483_647
+      this.radiusMeters > 50_000
     ) {
-      return "Enter a positive whole-number search radius in meters (at most 2147483647).";
+      return "Enter a positive whole-number search radius in meters (at most 50000).";
     }
     if (this.placeType !== undefined && !isPlaceType(this.placeType)) {
       return "Choose a supported place type.";

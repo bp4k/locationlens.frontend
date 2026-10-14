@@ -220,6 +220,7 @@ export function SearchView({
               <Input
                 id={`${id}-location`}
                 value={locationText}
+                maxLength={500}
                 placeholder="City, address, or location"
                 onChange={(event) => setLocationText(event.target.value)}
               />
@@ -249,6 +250,7 @@ export function SearchView({
             id={`${id}-radius`}
             type="number"
             min={1}
+            max={50000}
             step={1}
             value={radius}
             onChange={(event) => setRadius(event.target.value)}
@@ -325,24 +327,11 @@ export function SearchView({
         )}
       </aside>
       <div className="ll-map-stage">
-        {/* The map still mounts only after a successful search. The illustration
-            before that is decorative, not a map or fabricated search results. */}
-        {search.status === "ready" ? (
-          <MapView
-            places={search.places}
-            selectedPlaceId={details.placeId}
-            onSelect={(placeId) => void selectPlace(placeId)}
-          />
-        ) : (
-          <div className="ll-explore-placeholder">
-            <div className="ll-map-art" aria-hidden="true"><span>⌖</span></div>
-            <div className="ll-placeholder-copy">
-              <span className="ll-eyebrow">A LITTLE CURIOSITY. A NEW DISCOVERY.</span>
-              <h2>Make room for<br />somewhere new.</h2>
-              <p>Search a city, a street, or a set of coordinates.<br />Your places will appear here.</p>
-            </div>
-          </div>
-        )}
+        <MapView
+          places={search.places}
+          selectedPlaceId={details.placeId}
+          onSelect={(placeId) => void selectPlace(placeId)}
+        />
       </div>
     </main>
   );
