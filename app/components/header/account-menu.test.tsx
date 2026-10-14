@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { FluentProvider, webLightTheme } from "@fluentui/react-components";
 import { Link, MemoryRouter, Route, Routes, createMemoryRouter, useNavigate } from "react-router";
 import { RouterProvider } from "react-router/dom";
-import { expect, it } from "vitest";
+import { expect, it, vi } from "vitest";
 import { AccountMenu } from "./account-menu";
 import { AuthProvider, useAuth } from "../../auth/auth-context";
 import { getAccessToken, saveSession } from "../../auth/token-storage";
@@ -77,4 +77,34 @@ it("signs out to welcome, replaces history, and blocks protected reentry", async
   await user.click(screen.getByRole("link", { name: "Revisit protected account" }));
   expect(await screen.findByRole("heading", { name: "Login route" })).toBeInTheDocument();
   expect(screen.queryByRole("heading", { name: "Private account page" })).not.toBeInTheDocument();
+});
+
+it("redirects to Keycloak's end-session endpoint when an IDP realm is configured", async () => {
+  const user = userEvent.setup();
+  saveSession("test-token", 3600);
+  vi.stubEnv("VITE_IDP_URI", "http://localhost:8084/realms/locationlens");
+  vi.stubEnv("VITE_IDP_CLIENT_ID", "locationlens");
+  // jsdom doesn't implement real navigation; stub window.location so the
+  // end-session redirect URL can be asserted instead of throwing.
+  const locationStub = { origin: "http://localhost:5173", href: "" };
+  vi.stubGlobal("location", locationStub);
+
+  render(
+    <FluentProvider theme={webLightTheme}>
+      <AuthProvider>
+        <MemoryRouter>
+          <AccountMenu />
+        </MemoryRouter>
+      </AuthProvider>
+    </FluentProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: "Account" }));
+  await user.click(await screen.findByRole("menuitem", { name: "Sign out" }));
+
+  expect(getAccessToken()).toBeNull();
+  expect(locationStub.href).toBe(
+    "http://localhost:8084/realms/locationlens/protocol/openid-connect/logout" +
+      "?client_id=locationlens" +
+      "&post_logout_redirect_uri=http%3A%2F%2Flocalhost%3A5173%2Fwelcome",
+  );
 });
