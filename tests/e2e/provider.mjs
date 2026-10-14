@@ -35,7 +35,7 @@ function claims(role) {
     given_name: "Claim",
     family_name: role,
     email: `${role}@example.test`,
-    realm_access: { roles: role === "admin" ? ["admin"] : ["user"] },
+    realm_access: { roles: role === "admin" ? ["locationlens_admin"] : ["user"] },
   };
 }
 function json(res, status, body) {
