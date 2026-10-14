@@ -23,6 +23,7 @@ it("opens the signed-in review history from the account menu", async () => {
     </FluentProvider>,
   );
   await userEvent.click(screen.getByRole("button", { name: "Account" }));
+  expect(screen.queryByRole("menuitem", { name: "Sign out" })).not.toBeInTheDocument();
   await userEvent.click(
     await screen.findByRole("menuitem", { name: "My reviews" }),
   );
@@ -43,7 +44,8 @@ function SessionControls() {
   );
 }
 
-it("signs out to welcome, replaces history, and blocks protected reentry", async () => {
+// This interaction requires the temporarily removed Sign out menu item.
+it.skip("signs out to welcome, replaces history, and blocks protected reentry", async () => {
   const user = userEvent.setup();
   saveSession("test-token", 3600);
   // Match the app's framework data router so synchronous navigation commits are
@@ -79,7 +81,8 @@ it("signs out to welcome, replaces history, and blocks protected reentry", async
   expect(screen.queryByRole("heading", { name: "Private account page" })).not.toBeInTheDocument();
 });
 
-it("redirects to Keycloak's end-session endpoint when an IDP realm is configured", async () => {
+// Retain coverage for when the Sign out menu item is restored.
+it.skip("redirects to Keycloak's end-session endpoint when an IDP realm is configured", async () => {
   const user = userEvent.setup();
   saveSession("test-token", 3600);
   vi.stubEnv("VITE_IDP_URI", "http://localhost:8084/realms/locationlens");

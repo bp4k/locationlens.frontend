@@ -1,5 +1,11 @@
 # Frontend sign-out
 
+The Account menu's Sign out action is currently removed while deployed logout
+behavior is investigated. The local `AuthClient.logOut()` and provider methods
+and the menu's sign-out handler remain in place. The UI flow described below
+is temporarily unavailable. Its menu interaction tests are retained but skipped
+until the action is restored; authentication functionality tests remain active.
+
 Sign out now ends the Keycloak SSO session, not just the local one. Previously
 the Account → Sign out action only cleared this app's stored token, so the
 identity provider still held a valid SSO cookie and the next `/v1/login` was
