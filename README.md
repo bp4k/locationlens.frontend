@@ -1,96 +1,32 @@
-# Welcome to React Router!
+# LocationLens frontend
 
-A modern, production-ready template for building full-stack React applications using React Router.
+React/TypeScript interface for nearby place discovery. The application provides
+Keycloak sign-in, search and type filtering, synchronized Google map/text results,
+place details, reviews/history, and business claims/admin review.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/remix-run/react-router-templates/tree/main/default)
+## Customer/developer handoff
 
-## Features
+- [Release notes and known limitations](RELEASE_NOTES.md)
+- [Installation, configuration, build/run, testing, deployment and troubleshooting](docs/install.md)
+- [Frontend environment template](.env.example)
+- [Place components and API integration](docs/places.md)
+- [Authentication/session behavior](docs/auth.md)
+- [Reviews](docs/reviews.md) and [UI](docs/ui.md)
+- [Paired backend repository](https://github.com/bp4k/locationlens)
 
-- 🚀 Server-side rendering
-- ⚡️ Hot Module Replacement (HMR)
-- 📦 Asset bundling and optimization
-- 🔄 Data loading and mutations
-- 🔒 TypeScript by default
-- 🎉 TailwindCSS for styling
-- 📖 [React Router docs](https://reactrouter.com/)
+Start with the installation guide. It covers **both services and Keycloak**, not
+only npm commands. The local frontend address is `http://127.0.0.1:5174/welcome`.
+The Sign out menu item is currently removed; its implementation remains.
 
-## Getting Started
+## Developer checks
 
-### Installation
-
-Install the dependencies:
-
-```bash
-npm install
-```
-
-### Development
-
-Start the development server with HMR:
-
-```bash
-npm run dev
-```
-
-Your application will be available at `http://localhost:5173`.
-
-## Building for Production
-
-Create a production build:
-
-```bash
+```text
+npm ci
+npm run typecheck
+npm test -- --maxWorkers=2 --testTimeout=15000
 npm run build
 ```
 
-## Deployment
-
-### Docker Deployment
-
-To build and run using Docker:
-
-```bash
-docker build -t my-app .
-
-# Run the container
-docker run -p 3000:3000 my-app
-```
-
-The containerized application can be deployed to any platform that supports Docker, including:
-
-- AWS ECS
-- Google Cloud Run
-- Azure Container Apps
-- Digital Ocean App Platform
-- Fly.io
-- Railway
-
-### DIY Deployment
-
-If you're familiar with deploying Node applications, the built-in app server is production-ready.
-
-Make sure to deploy the output of `npm run build`
-
-```
-├── package.json
-├── package-lock.json (or pnpm-lock.yaml, or bun.lockb)
-├── build/
-│   ├── client/    # Static assets
-│   └── server/    # Server-side code
-```
-
-## Styling
-
-This template comes with [Tailwind CSS](https://tailwindcss.com/) already configured for a simple default starting experience. You can use whatever CSS framework you prefer.
-
----
-
-Built with ❤️ using React Router.
-
-## Reviews
-
-`ReviewView` supports place reviews, user review history, and submission using
-Fluent UI and the existing authenticated API helper. Routes, API contract, and
-test instructions are documented in [docs/reviews.md](docs/reviews.md).
-
-Run `npm test` for unit tests, `npm run typecheck` for TypeScript checks, and
-`npm run build` for the production build.
+SPA build output: `build/client/`. CI and manually triggered deployment are in
+`.github/workflows`. Deployment does not automatically promote App Engine traffic.
+See the guide for GitHub assessor access and the final handoff acceptance checklist.
