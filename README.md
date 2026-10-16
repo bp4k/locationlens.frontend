@@ -94,3 +94,11 @@ test instructions are documented in [docs/reviews.md](docs/reviews.md).
 
 Run `npm test` for unit tests, `npm run typecheck` for TypeScript checks, and
 `npm run build` for the production build.
+
+# Pictures from Result
+<img width="1920" height="1243" alt="Screenshot 2026-10-14 at 6 21 26 AM" src="https://github.com/user-attachments/assets/db8e3f9c-c075-4f66-9466-c5057a319a7e" />
+<img width="1920" height="1243" alt="Screenshot 2026-10-14 at 6 22 30 AM" src="https://github.com/user-attachments/assets/af7e34fb-4e00-4f22-bc8e-cddf21e8e9f9" />
+<img width="3024" height="4032" alt="81365554775__3DD25C75-AFCE-42BC-903B-AD30A8F952A5" src="https://github.com/user-attachments/assets/ba1c3746-4d8a-44e8-a4e7-b182c1bca21d" />
+
+
+
